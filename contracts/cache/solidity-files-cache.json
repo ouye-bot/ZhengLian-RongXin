@@ -1,0 +1,145 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\contracts\\contracts\\AuditStorage.sol": {
+      "lastModificationDate": 1793466190276,
+      "contentHash": "c48167fc0fde4ca763ce5dd61a84a17f",
+      "sourceName": "contracts/AuditStorage.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "AuditStorage"
+      ]
+    },
+    "D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\contracts\\contracts\\PublicKeyRegistry.sol": {
+      "lastModificationDate": 1793466190288,
+      "contentHash": "c5bc1acad5f9c6da3844658d24a0cb0a",
+      "sourceName": "contracts/PublicKeyRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "PublicKeyRegistry"
+      ]
+    },
+    "D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\contracts\\contracts\\Verifier.sol": {
+      "lastModificationDate": 1793540542081,
+      "contentHash": "bb6394fa1c72f19eda1f527c9b735936",
+      "sourceName": "contracts/Verifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.0 <0.9.0"
+      ],
+      "artifacts": [
+        "Verifier"
+      ]
+    },
+    "D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\contracts\\contracts\\ZKPVerifier.sol": {
+      "lastModificationDate": 1793466190329,
+      "contentHash": "9534822f271dd63cb79454c5c6ebc562",
+      "sourceName": "contracts/ZKPVerifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ZKPVerifier"
+      ]
+    }
+  }
+}

@@ -1,0 +1,511 @@
+const express = require('express');
+const router = express.Router();
+const userDao = require('../dao/userDao');
+const proofDao = require('../dao/proofDao');
+const transactionDao = require('../dao/transactionDao');
+const { execute } = require('../config/database');
+const logger = require('../utils/logger');
+const { generateSM3Hash, verifySM2Signature, buildSignatureData } = require('../utils/cryptoUtils');
+const crypto = require('crypto');
+const { verifyProof } = require('../services/zkService');
+const blockchainService = require('../services/blockchainService');
+const blockchainQueueService = require('../services/blockchainQueueService');
+const creditHistoryDao = require('../dao/creditHistoryDao');
+const path = require('path');
+const fs = require('fs');
+
+// 查询用户是否有逾期借款（系统自动判断，非用户自述）
+async function checkUserHasOverdue(userId) {
+  const rows = await execute(
+    "SELECT COUNT(*) AS cnt FROM transactions WHERE user_id = ? AND type = 'loan' AND status = 'overdue'",
+    [userId]
+  );
+  return rows[0].cnt > 0;
+}
+
+const CREDIT_RULES = {
+  MIN_SCORE: 300,
+  MAX_SCORE: 850,
+  LOAN_LIMITS: {
+    600: 1000,
+    650: 2000,
+    700: 5000,
+    750: 10000,
+    800: 20000,
+    850: 50000
+  },
+  SCORE_CHANGES: {
+    ON_TIME_REPAYMENT: 10,
+    EARLY_REPAYMENT: 5,
+    INVEST_REWARD: 2,
+    FREQUENCY_PENALTY: 5,
+    LATE_REPAYMENT_1: -5,
+    LATE_REPAYMENT_2: -15,
+    LATE_REPAYMENT_3: -30
+  },
+  INTEREST_RATES: {
+    300: 13.8,
+    600: 10.0,
+    650: 8.0,
+    700: 6.0,
+    750: 4.0
+  },
+  COOLING_OFF_DAYS: 7,
+  COOLING_OFF_LOAN_RATIO: 0.5
+};
+
+// ZKP 证明必须携带的公开阈值（publicSignals[1]）。
+// 600 = 借款准入阈值：LOAN_LIMITS 最低档（上方 CREDIT_RULES.LOAN_LIMITS[600]），
+// 与前端生成口径一致（CreditProof.js worker 固定 600；Borrow.js generateProof(creditScore, 600, user.id)），
+// 亦与 dynamicConfigService LOAN_LIMIT_BY_SCORE 最低档一致。服务端强核该值，防止客户端自选低阈值绕过准入线。
+const PROOF_REQUIRED_THRESHOLD = 600;
+
+// 验证口令（verification_code）有效期：24 小时。证明本体 expires_at 仍为 30 天（两者独立）。
+const VERIFICATION_CODE_TTL_MS = 24 * 60 * 60 * 1000;
+
+// 本地时区格式化（YYYY-MM-DD HH:mm:ss）。expires_at 与 code_expires_at 均按本地墙钟写入，
+// 与 MySQL 会话时区(+08:00) 一致，前端 toLocaleString 显示即真实到期时刻（历史上 expires_at 曾用 UTC 串写入，显示偏差 8h）。
+const formatLocalDateTime = (d) => {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+
+const getLoanLimit = (creditScore) => {
+  const limits = CREDIT_RULES.LOAN_LIMITS;
+  const scores = Object.keys(limits).map(Number).sort((a, b) => b - a);
+  for (const s of scores) {
+    if (creditScore >= s) return limits[s];
+  }
+  return 0;
+};
+
+const getInterestRate = (creditScore) => {
+  const rates = CREDIT_RULES.INTEREST_RATES;
+  const scores = Object.keys(rates).map(Number).sort((a, b) => b - a);
+  for (const s of scores) {
+    if (creditScore >= s) return rates[s];
+  }
+  return 13.8;
+};
+
+// 查询用户逾期状态（供前端生成 ZKP 前调用）
+router.get('/overdue-status/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const hasOverdue = await checkUserHasOverdue(parseInt(userId));
+    res.json({
+      success: true,
+      data: { hasOverdue, hasNoOverdue: !hasOverdue }
+    });
+  } catch (error) {
+    logger.error('查询逾期状态失败', { error: error.message, userId: req.params.userId });
+    res.status(500).json({ success: false, message: '查询逾期状态失败' });
+  }
+});
+
+// 生成信用证明
+// 前端为主通道（端侧生成ZKP），后端只验证和存储
+// 后端异步队列 /api/v1/zk/generate-proof 为降级备份
+router.post('/generate-proof', async (req, res) => {
+  try {
+    const { userId, proof, publicSignals, signature } = req.body;
+
+    logger.info('生成信用证明请求', { userId, hasProof: !!proof, hasPublicSignals: !!publicSignals });
+
+    // 系统自动查询用户逾期状态（不信任前端传值）
+    const serverHasNoOverdue = !(await checkUserHasOverdue(parseInt(userId)));
+    logger.info('用户逾期状态（系统查询）', { userId, hasNoOverdue: serverHasNoOverdue });
+
+    // 验证用户存在
+    const user = await userDao.findById(parseInt(userId));
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    // 验证业务级SM2签名
+    if (!signature) {
+      logger.warning('信用证明生成失败：缺少SM2签名', { userId });
+      return res.status(400).json({ success: false, message: '缺少SM2签名' });
+    }
+    if (!user.sm2_public_key) {
+      logger.warning('信用证明生成失败：用户未注册SM2公钥', { userId });
+      return res.status(400).json({ success: false, message: '用户未注册SM2公钥' });
+    }
+    const signatureData = JSON.stringify({ userId: String(userId), creditScore: user.credit_score || 0 });
+    const isSignatureValid = verifySM2Signature(signatureData, signature, user.sm2_public_key);
+    if (!isSignatureValid) {
+      logger.warning('信用证明生成失败：无效的SM2签名', { userId });
+      return res.status(400).json({ success: false, message: '无效的SM2签名' });
+    }
+    logger.info('SM2签名验证通过', { userId });
+
+    // 如果前端提供了 proof 和 publicSignals，进行端侧ZKP验证
+    if (proof && publicSignals) {
+      try {
+        // 密码学验证 + isValid=1 + 阈值强核（publicSignals[1] 必须等于 PROOF_REQUIRED_THRESHOLD）
+        const isProofValid = await verifyProof(proof, publicSignals, PROOF_REQUIRED_THRESHOLD);
+
+        if (!isProofValid) {
+          logger.warning('端侧零知识证明验证失败', { userId });
+          return res.status(400).json({
+            success: false,
+            message: '零知识证明验证失败'
+          });
+        }
+
+        logger.info('端侧零知识证明验证通过', { userId });
+
+        // 服务端独立校验逾期状态（不信任 ZKP 中的 hasNoOverdue 输入）
+        if (!serverHasNoOverdue) {
+          logger.warning('用户有逾期记录，拒绝生成信用证明', { userId });
+          return res.status(400).json({
+            success: false,
+            message: '您当前有逾期借款记录，无法生成信用证明'
+          });
+        }
+      } catch (verifyError) {
+        logger.error('ZKP验证异常', { error: verifyError.message, userId });
+        return res.status(400).json({
+          success: false,
+          message: '零知识证明验证失败: ' + verifyError.message
+        });
+      }
+    }
+
+    // 创建包含真实信用评分的数据
+    const creditScore = user.credit_score || 600;
+    const proofData = JSON.stringify({ creditScore, verified: true, timestamp: Date.now() });
+
+    const sm3Hash = generateSM3Hash(proofData);
+
+    const proofId = `proof_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const verificationCode = `code_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const expiresAtDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const expiresAt = formatLocalDateTime(expiresAtDate);
+    // 验证口令 24h 有效期（独立于证明本体的 30 天）；本地墙钟格式化，见 formatLocalDateTime 注释
+    const codeExpiresAtDate = new Date(Date.now() + VERIFICATION_CODE_TTL_MS);
+    const codeExpiresAt = formatLocalDateTime(codeExpiresAtDate);
+
+    // 保存信用证明到数据库
+    const savedProof = await proofDao.create({
+      user_id: user.id,
+      proof_id: proofId,
+      verification_code: verificationCode,
+      sm3_hash: sm3Hash,
+      proof_data: proofData,
+      expires_at: expiresAt,
+      code_expires_at: codeExpiresAt,
+      zk_proof: proof ? JSON.stringify(proof) : null,
+      public_signals: publicSignals ? JSON.stringify(publicSignals) : null
+    });
+    logger.info('信用证明生成成功', { userId, proofId, expiresAt: expiresAtDate.toISOString(), codeExpiresAt: codeExpiresAtDate.toISOString() });
+
+    // 异步上链存证 - 加入重试队列
+    blockchainQueueService.enqueue('storeAuditHash', {
+      sm3Hash,
+      timestamp: Math.floor(Date.now() / 1000),
+      transactionType: 'CREDIT_PROOF_GENERATE',
+      userId: userId.toString()
+    }).catch(err => {
+      logger.error('信用证明上链入队失败', { proofId, error: err.message });
+    });
+
+    // 构建 ZKP 标准嵌套结构
+    const proofResult = {
+      proofId: proofId,
+      verificationCode: verificationCode,
+      proofData: proofData,
+      publicSignals: publicSignals || ['1'],
+      expiresAt: expiresAtDate.toISOString(),
+      sm3Hash: sm3Hash
+    };
+
+    try {
+      res.json({
+        success: true,
+        message: '信用证明生成成功',
+        data: {
+          proof: proofResult,
+          expiresAt: expiresAtDate.toISOString(),
+          sm3Hash: sm3Hash
+        }
+      });
+    } catch (err) {
+      logger.error('发送响应失败', { error: err.message, stack: err.stack });
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: '生成信用证明失败',
+          error: err.message
+        });
+      }
+    }
+  } catch (error) {
+    logger.error('生成信用证明失败', { error: error.message, stack: error.stack });
+    res.status(500).json({
+      success: false,
+      message: '生成信用证明失败',
+      error: error.message
+    });
+  }
+});
+
+// 验证信用证明
+router.post('/verify-proof', async (req, res) => {
+  try {
+    // 支持嵌套结构 (proof.proofId) 和扁平结构 (proofId)
+    const proofId = req.body.proof?.proofId || req.body.proofId;
+    const verificationCode = req.body.verificationCode || req.body.proof?.verificationCode;
+
+    logger.info('验证信用证明请求', { proofId, verificationCode });
+
+    // 从数据库获取信用证明
+    const proof = await proofDao.findByProofId(proofId);
+
+    if (!proof) {
+      return res.json({
+        success: false,
+        message: '信用证明不存在'
+      });
+    }
+
+    // 检查验证口令是否过期：优先 code_expires_at（24h）；存量行该列为 NULL 时退回 expires_at（30 天）口径
+    if (new Date(proof.code_expires_at || proof.expires_at) < new Date()) {
+      return res.json({
+        success: false,
+        message: '信用证明已过期'
+      });
+    }
+
+    // 验证证明
+
+    // 使用时序安全比较防止时序攻击
+    let isValid = false;
+    if (proof.verification_code && verificationCode) {
+      const a = Buffer.from(proof.verification_code, 'utf8');
+      const b = Buffer.from(verificationCode, 'utf8');
+      isValid = a.length === b.length && crypto.timingSafeEqual(a, b);
+    }
+
+    if (isValid) {
+      logger.info('信用证明验证成功', { proofId });
+
+      // 异步上链存证 - 加入重试队列
+      const verifyHash = generateSM3Hash(JSON.stringify({ proofId, action: 'verify', timestamp: Date.now() }));
+      blockchainQueueService.enqueue('storeAuditHash', {
+        sm3Hash: verifyHash,
+        timestamp: Math.floor(Date.now() / 1000),
+        transactionType: 'CREDIT_PROOF_VERIFY',
+        userId: proof.user_id ? proof.user_id.toString() : '0'
+      }).catch(err => {
+        logger.error('信用证明验证上链入队失败', { proofId, error: err.message });
+      });
+
+      const responseData = {
+        proofId,
+        expiresAt: proof.expires_at
+      };
+
+      // 如果有存储的 ZKP proof，返回给第三方独立验证
+      try {
+        if (proof.zk_proof && proof.public_signals) {
+          responseData.zkProof = JSON.parse(proof.zk_proof);
+          responseData.publicSignals = JSON.parse(proof.public_signals);
+        }
+      } catch (parseErr) {
+        logger.warning('ZKP data parse failed, returning proof without ZKP fields', {
+          proofId, error: parseErr.message
+        });
+      }
+
+      res.json({
+        success: true,
+        message: '信用证明验证成功',
+        data: responseData
+      });
+    } else {
+      logger.warning('信用证明验证失败', { proofId });
+      res.json({
+        success: false,
+        message: '信用证明验证失败'
+      });
+    }
+  } catch (error) {
+    logger.error('验证信用证明失败', { error: error.message, stack: error.stack });
+    res.status(500).json({
+      success: false,
+      message: '验证信用证明失败',
+      error: error.message
+    });
+  }
+});
+
+// 获取验证密钥（公开接口，供第三方独立验证 ZKP）
+router.get('/verification-key', async (req, res) => {
+  try {
+    const vkeyPath = path.join(__dirname, '../../circuits/build/verification_key.json');
+    if (!fs.existsSync(vkeyPath)) {
+      return res.status(404).json({ success: false, message: '验证密钥未找到' });
+    }
+    const vkey = JSON.parse(fs.readFileSync(vkeyPath, 'utf8'));
+    res.json({ success: true, data: vkey });
+  } catch (error) {
+    logger.error('获取验证密钥失败', { error: error.message });
+    res.status(500).json({ success: false, message: '获取验证密钥失败' });
+  }
+});
+
+// 获取用户信用信息
+router.get('/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    logger.info('获取用户信用信息', { userId });
+    
+    // 从数据库获取用户信息
+    const user = await userDao.findById(parseInt(userId));
+    if (!user) {
+      return res.json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+    
+    // 从数据库获取用户的信用证明
+    const proofs = await proofDao.findByUserId(parseInt(userId));
+    
+    // 过滤出有效证明并按创建时间降序排列
+    const validProofs = proofs
+      .filter(proof => new Date(proof.expires_at) > new Date())
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // 获取最新有效证明
+    const latestProofData = validProofs.length > 0 ? validProofs[0] : null;
+    const latestProof = latestProofData ? {
+      id: latestProofData.proof_id,
+      verificationCode: latestProofData.verification_code,
+      creditScore: user.credit_score,
+      expiresAt: latestProofData.expires_at,
+      proofData: latestProofData.proof_data,
+      sm3Hash: latestProofData.sm3_hash
+    } : null;
+
+    logger.info('获取用户信用信息成功', { userId, creditScore: user.credit_score, validProofs: validProofs.length });
+
+    res.json({
+      success: true,
+      data: {
+        userId: user.id,
+        username: user.username,
+        creditScore: user.credit_score,
+        hasValidProof: validProofs.length > 0,
+        lastProofAt: latestProofData ? latestProofData.created_at : null,
+        proofExpiresAt: latestProofData ? latestProofData.expires_at : null,
+        proof: latestProof
+      }
+    });
+  } catch (error) {
+    logger.error('获取用户信用信息失败', { error: error.message, userId: req.params.userId });
+    res.status(500).json({
+      success: false,
+      message: '获取用户信用信息失败',
+      error: error.message
+    });
+  }
+});
+
+// 信用评分API（直接读取数据库中的信用分，不再全量重算）
+router.get('/score/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    logger.info('获取用户信用评分', { userId });
+
+    const user = await userDao.findById(parseInt(userId));
+    if (!user) {
+      return res.json({ success: false, message: '用户不存在' });
+    }
+
+    // 直接读取数据库中的信用分（增量更新的正确结果）
+    const creditScore = user.credit_score || 600;
+
+    // 从信用历史表获取变化记录（只读，不重新计算）
+    const records = await creditHistoryDao.findByUserId(parseInt(userId));
+    const history = records.map(r => ({
+      timestamp: r.created_at,
+      type: r.reason,
+      description: r.reason,
+      scoreChange: r.change_amount
+    }));
+
+    logger.info('获取用户信用评分成功', { userId, creditScore });
+
+    res.json({
+      success: true,
+      data: {
+        userId: user.id,
+        username: user.username,
+        creditScore,
+        history
+      }
+    });
+  } catch (error) {
+    logger.error('获取用户信用评分失败', { error: error.message, userId: req.params.userId });
+    res.status(500).json({
+      success: false,
+      message: '获取用户信用评分失败',
+      error: error.message
+    });
+  }
+});
+
+// 信用历史API
+router.get('/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    logger.info('获取用户信用历史', { userId });
+
+    const user = await userDao.findById(parseInt(userId));
+    if (!user) {
+      return res.json({ success: false, message: '用户不存在' });
+    }
+
+    const records = await creditHistoryDao.findByUserId(parseInt(userId));
+    const history = records.map(r => ({
+      id: r.id,
+      timestamp: r.created_at,
+      score: r.score,
+      change: r.change_amount,
+      description: r.reason
+    }));
+
+    logger.info('获取用户信用历史成功', { userId, historyCount: history.length });
+    
+    res.json({
+      success: true,
+      data: {
+        userId: user.id,
+        username: user.username,
+        creditScore: user.credit_score,
+        history: history
+      }
+    });
+  } catch (error) {
+    logger.error('获取信用历史失败', { error: error.message, userId: req.params.userId });
+    res.status(500).json({
+      success: false,
+      message: '获取信用历史失败',
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;
+module.exports.CREDIT_RULES = CREDIT_RULES;
+module.exports.PROOF_REQUIRED_THRESHOLD = PROOF_REQUIRED_THRESHOLD;
+module.exports.getLoanLimit = getLoanLimit;
+module.exports.getInterestRate = getInterestRate;

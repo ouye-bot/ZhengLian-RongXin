@@ -1,0 +1,573 @@
+======================================================================
+  证链融信 密码技术综合测试
+======================================================================
+  开始时间: 2026/11/2 02:32:42
+
+
+======================================================================
+  模块1：SM2 椭圆曲线密码测试
+======================================================================
+
+  1.1 密钥对生成格式正确
+[2026-11-01T18:32:42.472Z] [INFO] SM2 key pair generated successfully
+     ✓ publicKey: 正确, privateKey: 正确
+
+  1.2 签名与验签一致性
+     ✓ 验签结果: true
+
+  1.3 错误公钥验签失败
+[2026-11-01T18:32:42.585Z] [INFO] SM2 key pair generated successfully
+     ✓ 错误公钥验签结果: false (应为 false)
+
+  1.4 消息篡改后验签失败
+     ✓ 篡改消息验签结果: false (应为 false)
+
+  1.5 批量验证
+     ✓ 批量验证: 10/10 通过
+
+  1.6 签名缓存一致性
+     ✓ 两次验签结果一致: true
+
+  1.7 空消息签名
+     ✓ 空消息签名: 签名消息不能为空
+
+  1.8 超长消息签名（100KB）
+     ✓ 100KB消息签名验签: 通过
+
+  1.9 私钥格式错误
+     ✓ 私钥格式错误: 正确抛出异常 - SM2 私钥格式无效：必须为64位十六进制字符串
+
+  1.10 签名位翻转检测
+     ✓ 签名位翻转后验签: false (应为 false)
+
+  1.11 buildSignatureData 格式验证
+     ✓ buildSignatureData: 键顺序正确, 缺失键跳过
+
+======================================================================
+  模块2：SM3 哈希函数测试
+======================================================================
+
+  2.1 同数据同哈希
+     ✓ 三次哈希值: 完全相同
+
+  2.2 异数据异哈希
+     ✓ 三条数据哈希值: 互不相同
+
+  2.3 雪崩效应
+     ✓ 'abc' vs 'abd': 59/64 字符不同
+
+  2.4 长度扩展攻击防护
+     ✓ 短数据与长数据哈希: 无前缀关联
+
+  2.5 雪崩效应阈值提高
+     ✓ 'abc' vs 'abd': 59/64 字符不同 (阈值: >=28)
+
+  2.6 Unicode 数据哈希
+     ✓ Unicode哈希: 64位hex, 与英文不同
+
+======================================================================
+  模块3：SM4 对称加密测试（DEK 级操作）
+======================================================================
+
+  3.1 加解密循环
+     ✓ 1KB 数据加解密: 成功
+
+  3.2 认证标签防篡改
+     ✓ 认证标签防篡改: 抛出异常
+
+  3.3 空数据加解密
+     ✓ 空字符串加解密: 成功
+
+  3.4 长数据（10KB）加解密
+     ✓ 10KB 数据加解密: 成功
+
+  3.5 数字输入加密
+     ✓ 数字12345加解密: 成功 (解密结果: 12345)
+
+  3.6 encryptFields/decryptFields users 表（DEK 级模拟）
+     ✓ users加密: balance=已加密, credit_score=已加密, name=未加密
+     ✓ users解密: balance=正确, credit_score=正确, name=正确
+
+  3.7 encryptFields/decryptFields transactions 表（DEK 级模拟）
+     ✓ transactions加密: amount=已加密, interest=已加密, type=未加密
+     ✓ transactions解密: amount=正确, interest=正确, type=正确
+
+  3.8 reEncrypt 密钥轮换
+     ✓ 密钥轮换: 新旧密文不同=true, 解密一致=true
+
+  3.9 认证标签完整性（系统性）
+     ✓ 系统性篡改检测: iv=拒绝, authTag=拒绝, ciphertext=拒绝
+
+  3.10 跨用户密文隔离
+     ✓ 跨用户隔离: 正确拒绝
+
+  3.11 旧格式密文兼容解密
+[2026-11-01T18:32:44.085Z] [ERROR] SECURITY: 解密降级为v1无AAD模式，AAD绑定被跳过，需尽快迁移数据到v2格式 { aad: 'users:balance:999' }
+     ✓ 旧格式兼容: 成功降级解密
+
+  3.12 DEK 缓存过期后自动重新获取
+数据库 finzktrust 创建成功
+[2026-11-01T18:32:44.173Z] [INFO] 用户无 DEK，自动生成（兼容迁移） { userId: 88888 }
+[2026-11-01T18:32:44.178Z] [INFO] 用户 DEK 已就绪 { userId: 88888 }
+     ✓ DEK 缓存一致性: 一致
+
+======================================================================
+  模块4：TOTP 动态口令测试
+======================================================================
+
+  4.1 TOTP 正确验证
+     ✓ 正确 TOTP 码验证: 通过
+
+  4.2 错误 TOTP 码拒绝
+     ✓ 错误码 '000000' 验证: 正确拒绝
+
+  4.3 种子随机性
+     ✓ 两次生成种子: 不同
+
+  4.4 时间窗口容错 - 前一窗口
+     ✓ 前一窗口(-30s)验证: 通过
+
+  4.5 时间窗口容错 - 后一窗口
+     ✓ 后一窗口(+30s)验证: 通过
+
+  4.6 时间窗口超限拒绝
+     ✓ 超限窗口(-90s)验证: false (应为 false)
+
+  4.7 备份验证码完整流程
+     ✓ 备份验证码生成: 10个8位码
+     ✓ 备份验证码哈希: 10个哈希值
+     ✓ 备份验证码验证: 匹配索引=0
+     ✓ 备份验证码二次验证: 正确拒绝已使用的码
+
+======================================================================
+  模块5：零知识证明 ZKP 测试
+======================================================================
+[2026-11-01T18:32:45.614Z] [INFO] 区块链服务路由 → FISCO BCOS 联盟链
+
+  5.1 ZKP 证明生成
+[2026-11-01T18:32:45.615Z] [INFO] 生成零知识证明 { creditScore: 750, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:32:46.483Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+     ✓ 证明生成: 包含完整 pi_a, pi_b, pi_c
+
+  5.2 ZKP 正确验证
+[2026-11-01T18:32:46.490Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.490Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:46.491Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '2851111325307018905861168697143358058475678744531555822431620691241134993839',
+      '15867856538355816987393657654595655540744897113404165419460499041752115820742'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '11797454050415226655263801356287088838738033124119870357020705981279347523194',
+      '17941098042484973797488031604035327559507372110471073682993106883503982940277'
+    ]
+  }
+}
+[2026-11-01T18:32:46.510Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:46.512Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过 ZKP 存证 { proofId: '826889c9-ce66-4add-9508-60f32feca2ca' }
+     ✓ 正确证明验证: true
+
+  5.3 ZKP 错误证明验证失败
+[2026-11-01T18:32:46.517Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.517Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:46.517Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '2851111325307018905861168697143358058475678744531555822431620691241134993839',
+      '15867856538355816987393657654595655540744897113404165419460499041752115820742'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '11797454050415226655263801356287088838738033124119870357020705981279347523194',
+      '17941098042484973797488031604035327559507372110471073682993106883503982940277'
+    ]
+  }
+}
+[2026-11-01T18:32:46.517Z] [WARNING] 链上 ZKP 验证失败 {
+  proofId: '826889c9-ce66-4add-9508-60f32feca2ca',
+  error: 'Service not initialized'
+}
+[2026-11-01T18:32:46.518Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过链上状态更新 { proofId: '826889c9-ce66-4add-9508-60f32feca2ca' }
+[2026-11-01T18:32:46.535Z] [INFO] 零知识证明验证结果: { verificationResult: false }
+     ✓ 篡改信号验证: false (应为 false)
+
+  5.4 ZKP 证明数据结构完整性
+     ✓ 证明结构: pi_a=true, pi_b=true, pi_c=true, publicSignals[0]=1, isNaN=false
+
+  5.5 边界值 - score == threshold
+[2026-11-01T18:32:46.536Z] [INFO] 生成零知识证明 { creditScore: 600, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:32:46.681Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.686Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.686Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:46.686Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '2181440708137177711457893393389273491701494512452178519354730581555254121896',
+      '5916511386355209079465527586160237664747641821524960500136428378663717171799'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '8488032083118618987848942586235696209279157172929685427973982479479992945744',
+      '4367307178469496853186883308825435779128842734650707419110738431349726164296'
+    ]
+  }
+}
+[2026-11-01T18:32:46.703Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:46.703Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过 ZKP 存证 { proofId: '8fcd6c9a-fedc-4516-986e-ffd025a44b0f' }
+     ✓ score=600, threshold=600: 生成=true, 验证=true
+
+  5.6 不达标 - score < threshold
+[2026-11-01T18:32:46.704Z] [INFO] 生成零知识证明 { creditScore: 500, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:32:46.705Z] [WARNING] 链上 ZKP 验证失败 {
+  proofId: '8fcd6c9a-fedc-4516-986e-ffd025a44b0f',
+  error: 'Service not initialized'
+}
+[2026-11-01T18:32:46.705Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过链上状态更新 { proofId: '8fcd6c9a-fedc-4516-986e-ffd025a44b0f' }
+[2026-11-01T18:32:46.858Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.861Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:46.861Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:46.862Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '17854467584179621568091731178499025805591839597478585414332916029475458910622',
+      '18175199206644837027227316596080449165044790631842566243748432925472093264643'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '14524099662714416054986257177713281277985324914755887325481793131992148234294',
+      '17511994497365932066869829170230962807092130517377739807094723372681138725394'
+    ]
+  }
+}
+[2026-11-01T18:32:46.879Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:46.880Z] [INFO] ZKP 证明有效但 isValid=0，业务验证不通过 { publicSignals: [ '0', '600' ] }
+     ✓ score=500 < threshold=600: 验证=false (应为 false)
+
+  5.7 单参数绕过漏洞测试（对应 Bug B2）
+     ✓ 单参数调用: 抛出异常 - 缺少必要参数: proof 和 publicSignals
+
+  5.8 极端值 - 低分
+[2026-11-01T18:32:46.881Z] [INFO] 生成零知识证明 { creditScore: 300, threshold: 300, hasNoOverdue: 1 }
+[2026-11-01T18:32:47.037Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.041Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.042Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:47.042Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '17466513283238829570314803387346286838755885583666188818471928737336144853450',
+      '8307800221557192928892816562490122801307304742631056511044179525733362138545'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '16962268280385018005296389047685651197596296154341936040530136070794346854633',
+      '16995860764521979641754191586561065889196417212618251448611384753634638023397'
+    ]
+  }
+}
+[2026-11-01T18:32:47.057Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:47.057Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过 ZKP 存证 { proofId: '7e362ef8-8b33-4518-adaa-e9e83de6d6df' }
+     ✓ score=300: 结构=16962268280385018005296389047685651197596296154341936040530136070794346854633,16995860764521979641754191586561065889196417212618251448611384753634638023397,1, 验证=true
+
+  5.9 hasNoOverdue=0 但 score 达标
+[2026-11-01T18:32:47.058Z] [INFO] 生成零知识证明 { creditScore: 750, threshold: 600, hasNoOverdue: 0 }
+[2026-11-01T18:32:47.059Z] [WARNING] 链上 ZKP 验证失败 {
+  proofId: '7e362ef8-8b33-4518-adaa-e9e83de6d6df',
+  error: 'Service not initialized'
+}
+[2026-11-01T18:32:47.059Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过链上状态更新 { proofId: '7e362ef8-8b33-4518-adaa-e9e83de6d6df' }
+[2026-11-01T18:32:47.215Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.219Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.220Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:47.220Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '15332647608539398658233816293124916086771190648665426533892536938389884694278',
+      '15670842980672864431859894835943472282326488336903710490310646062770173817364'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '16100749068185272480652213421018612478375336159214563930559638538481728374488',
+      '85878022295107525433623788813561904303821152007201795137717236853334166185'
+    ]
+  }
+}
+[2026-11-01T18:32:47.237Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:47.237Z] [INFO] ZKP 证明有效但 isValid=0，业务验证不通过 { publicSignals: [ '0', '600' ] }
+     ✓ hasNoOverdue=0, score=750: 验证=false (应为 false)
+
+  5.10 范围约束 - 负数 creditScore
+[2026-11-01T18:32:47.238Z] [INFO] 生成零知识证明 { creditScore: -100, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:32:47.389Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.395Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.395Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:47.395Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '4229555751775671305805985856986918627781612456998066047991683153517004834249',
+      '2668191558636211909514870883742070936074486776387815611646589935056143147612'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '4162765070627359196849676518056067023399229090154303949753423109525366477456',
+      '11271326123343360479459991714321164742445565862406374646956126996641363628415'
+    ]
+  }
+}
+[2026-11-01T18:32:47.414Z] [INFO] 零知识证明验证结果: { verificationResult: false }
+     ✓ 负数 creditScore=-100: 验证=false
+
+  5.11 范围约束 - 超大 creditScore
+[2026-11-01T18:32:47.416Z] [INFO] 生成零知识证明 { creditScore: 9999, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:32:47.564Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.568Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.568Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:47.569Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '15290308727348072052011867011299973938908380610878561537959357660198393580762',
+      '7440172506304234962360836186527743385651833948943685472421449326042122048544'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '9286873502055669036614019956760491477875508033394813573441809658068637715752',
+      '7826097155444637302552263243977970481032509021778646971763280704911881787128'
+    ]
+  }
+}
+[2026-11-01T18:32:47.584Z] [INFO] 零知识证明验证结果: { verificationResult: false }
+     ✓ 超大 creditScore=9999: 验证=false
+
+  5.12 hasNoOverdue 非布尔值
+[2026-11-01T18:32:47.587Z] [ERROR] 生成零知识证明失败: {
+  error: 'hasNoOverdue 必须为布尔值',
+  stack: 'Error: hasNoOverdue 必须为布尔值\n' +
+    '    at exports.generateProof (D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\backend\\services\\zkService.js:41:13)\n' +
+    '    at CryptoTest.module5_zkpTests (D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\backend\\test\\crypto.test.js:1113:44)\n' +
+    '    at async CryptoTest.run (D:\\FIN-ZK-TRUST-master\\paper-version\\FIN-ZK-TRUST-master\\backend\\test\\crypto.test.js:63:5)'
+}
+     ✓ hasNoOverdue=2: 抛出异常 - hasNoOverdue 必须为布尔值
+
+  5.13 证明持久化 - zk_proof 和 public_signals 存储验证
+     ✓ 证明持久化: zk_proof=true, public_signals=true, 结构有效=true
+
+  5.14 存储后独立验证 - 用存储的 proof 数据独立验证
+[2026-11-01T18:32:47.619Z] [INFO] 验证零知识证明 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:32:47.619Z] [INFO] 验证密钥结构: {
+  vk_alpha_1_length: 3,
+  vk_beta_2_length: 3,
+  vk_gamma_2_length: 3,
+  vk_delta_2_length: 3,
+  IC_length: 3
+}
+[2026-11-01T18:32:47.619Z] [INFO] 格式化验证用的证明: {
+  formattedProof: {
+    pi_a: [
+      '2851111325307018905861168697143358058475678744531555822431620691241134993839',
+      '15867856538355816987393657654595655540744897113404165419460499041752115820742'
+    ],
+    pi_b: [ [Array], [Array] ],
+    pi_c: [
+      '11797454050415226655263801356287088838738033124119870357020705981279347523194',
+      '17941098042484973797488031604035327559507372110471073682993106883503982940277'
+    ]
+  }
+}
+[2026-11-01T18:32:47.632Z] [INFO] 零知识证明验证结果: { verificationResult: true }
+[2026-11-01T18:32:47.633Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过 ZKP 存证 { proofId: '7f680c35-66f8-4482-b6d7-4907bcb167a5' }
+     ✓ 独立验证: true
+
+  5.15 验证密钥端点 - verification_key.json 可读且格式正确
+     ✓ verification_key.json: exists=true, valid=true
+[2026-11-01T18:32:47.638Z] [WARNING] 链上 ZKP 验证失败 {
+  proofId: '7f680c35-66f8-4482-b6d7-4907bcb167a5',
+  error: 'Service not initialized'
+}
+[2026-11-01T18:32:47.638Z] [WARNING] FISCO BCOS 服务或 ZKPVerifier 未初始化，跳过链上状态更新 { proofId: '7f680c35-66f8-4482-b6d7-4907bcb167a5' }
+
+======================================================================
+  模块6：区块链审计存证测试
+======================================================================
+
+  6.1 区块链服务初始化
+[2026-11-01T18:32:47.639Z] [INFO] 开始初始化 FISCO BCOS 区块链服务... {
+  config: {
+    rpcUrl: 'http://127.0.0.1:8545',
+    groupId: 1,
+    chainId: 1,
+    consolePath: 'C:\\Users\\联想\\fisco-bcos-node\\console',
+    name: 'FISCO BCOS Consortium'
+  }
+}
+[2026-11-01T18:32:47.652Z] [INFO] FISCO BCOS 节点连接成功 { version: '2.9.0', chainId: '1', rpcUrl: 'http://127.0.0.1:8545' }
+[2026-11-01T18:32:47.658Z] [INFO] FISCO BCOS 合约配置加载完成 {
+  AuditStorage: '0x0f2d77c70f64c3e26b6616a83d37d7434cda726f',
+  ZKPVerifier: '0x86f42491386c79492c635a18f8b7fee28ed90a37',
+  Verifier: '0xa7d0d072ae9c7c4dfb7e549370f0538d4e65629a',
+  PublicKeyRegistry: '0x9023f24e5081a302cd46cc722c739029dfead1b9'
+}
+[2026-11-01T18:32:47.658Z] [INFO] FISCO BCOS 区块链服务初始化完成
+     ✓ 区块链服务初始化: 成功
+
+  6.2 审计哈希上链存证
+[2026-11-01T18:32:47.658Z] [INFO] 准备审计上链存证 (FISCO BCOS) {
+  sm3Hash: 'a9f890534e2c143b3fc5...',
+  transactionType: 'test_loan',
+  userId: 'test_user_id'
+}
+[2026-11-01T18:32:47.727Z] [INFO] sendRawTransaction 发送成功 {
+  contractName: 'AuditStorage',
+  methodName: 'storeAuditHash',
+  txHash: '0xf9ce9189b8f22f51772934ed34631dc0d80190260a97f19088af5bd27a29566a'
+}
+[2026-11-01T18:32:48.735Z] [INFO] 审计哈希上链存证成功 (FISCO BCOS) {
+  sm3Hash: 'a9f890534e2c143b3fc5...',
+  blockchainTxHash: '0xf9ce9189b8f22f51772934ed34631dc0d80190260a97f19088af5bd27a29566a',
+  blockNumber: 1954
+}
+     ✓ 上链存证: 成功
+
+  6.3 区块链节点不可用时优雅降级（自动验证）
+[2026-11-01T18:32:48.735Z] [WARNING] FISCO BCOS 服务或 AuditStorage 未初始化，跳过审计存证 { sm3Hash: 'c911ac2cf1edc18f0596...' }
+     ✓ 降级处理: 优雅降级 (threwError=false)
+
+======================================================================
+  模块7：Shamir 秘密共享 SSS 测试
+======================================================================
+
+  7.1 分片与恢复
+     ✓ SSS 分片恢复: 成功
+
+  7.2 不足分片恢复失败
+     ✓ 不足分片恢复: 正确拒绝
+
+  7.3 分片独立性
+     ✓ 分片独立性: 不泄露密钥
+
+  7.4 不同阈值组合 (2,2)
+     单分片恢复正确抛出异常: 需要至少2个分片来恢复密钥
+     ✓ (2,2)组合: 单分片无法恢复, 双分片正确恢复
+
+  7.5 重复分片恢复
+     ✓ 重复分片恢复: 正确拒绝
+
+======================================================================
+  测试结果汇总
+======================================================================
+
+✅ SM2 椭圆曲线密码: 11 通过, 0 失败
+
+✅ SM3 哈希函数: 6 通过, 0 失败
+
+✅ SM4 对称加密: 14 通过, 0 失败
+
+✅ TOTP 动态口令: 10 通过, 0 失败
+
+✅ 零知识证明 ZKP: 15 通过, 0 失败
+
+✅ 区块链审计存证: 3 通过, 0 失败
+
+✅ Shamir 秘密共享: 5 通过, 0 失败
+
+----------------------------------------------------------------------
+  总计: 64 通过, 0 失败, 0 跳过
+======================================================================
+
+📊 详细报告已保存: D:\FIN-ZK-TRUST-master\paper-version\FIN-ZK-TRUST-master\backend\test\results\crypto-report-1793557968740.json

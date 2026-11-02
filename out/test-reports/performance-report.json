@@ -1,0 +1,427 @@
+{
+  "timestamp": "2026-11-02T02:01:24.566Z",
+  "overallStatus": "success",
+  "modules": {
+    "apiStress": {
+      "status": "success"
+    },
+    "crypto": {
+      "status": "success"
+    },
+    "zkp": {
+      "status": "success"
+    },
+    "userInfo": {
+      "status": "success"
+    },
+    "securityChain": {
+      "status": "success"
+    },
+    "databaseStress": {
+      "status": "success"
+    },
+    "e2eBusiness": {
+      "status": "success"
+    },
+    "resourceMonitor": {
+      "status": "success"
+    }
+  },
+  "results": {
+    "module1": {
+      "status": "success",
+      "durationMs": "31579.12",
+      "baseline": {
+        "低负载": {
+          "total": 100,
+          "success": 100,
+          "status429": 0,
+          "errors": 0,
+          "successRate": "100.00",
+          "stats": {
+            "avg": 17.461692999999997,
+            "min": 2.806500000000028,
+            "max": 49.96350000000001,
+            "p50": 14.689599999999928,
+            "p90": 36.67089999999996,
+            "p95": 47.613200000000006,
+            "p99": 49.96350000000001
+          }
+        },
+        "中负载": {
+          "total": 450,
+          "success": 450,
+          "status429": 0,
+          "errors": 0,
+          "successRate": "100.00",
+          "stats": {
+            "avg": 35.03415266666665,
+            "min": 4.615299999999934,
+            "max": 48.60159999999996,
+            "p50": 36.28620000000001,
+            "p90": 43.469600000000014,
+            "p95": 45.46180000000004,
+            "p99": 48.03539999999998
+          }
+        },
+        "高负载": {
+          "total": 400,
+          "success": 400,
+          "status429": 0,
+          "errors": 0,
+          "successRate": "100.00",
+          "stats": {
+            "avg": 70.45879149999995,
+            "min": 13.188799999999901,
+            "max": 104.42540000000008,
+            "p50": 80.13390000000004,
+            "p90": 99.2994000000001,
+            "p95": 100.66700000000014,
+            "p99": 103.69869999999992
+          }
+        }
+      },
+      "capacity": {
+        "durationSec": "30.01",
+        "totalRequests": 21050,
+        "qps": 701.43,
+        "success": 21050,
+        "status429": 0,
+        "errors": 0,
+        "successRate": "100.00",
+        "stats": {
+          "avg": 10.098614940617582,
+          "min": 1.574800000002142,
+          "max": 25.072900000000118,
+          "p50": 10.445899999998801,
+          "p90": 12.960300000000188,
+          "p95": 13.896300000000338,
+          "p99": 16.117099999999482
+        }
+      }
+    },
+    "coldStart": {
+      "latencyMs": "2.73",
+      "status": "measured"
+    },
+    "module2": {
+      "status": "success",
+      "sm2KeyGen": {
+        "iterations": 6000,
+        "totalMs": "48638.49",
+        "avgMs": "8.106",
+        "opsPerSec": 123,
+        "memoryUsedKB": 4179.6
+      },
+      "sm2Sign": {
+        "iterations": 10000,
+        "totalMs": "160407.37",
+        "avgMs": "16.0407",
+        "opsPerSec": 62
+      },
+      "sm3Hash": {
+        "1KB": {
+          "iterations": 10000,
+          "totalMs": "588.82",
+          "avgMs": "0.0589",
+          "throughputMBs": 16.58
+        },
+        "10KB": {
+          "iterations": 5000,
+          "totalMs": "96994.24",
+          "avgMs": "19.3988",
+          "throughputMBs": 0.5
+        }
+      },
+      "sm4EncDec": {
+        "1KB": {
+          "iterations": 1000,
+          "totalMs": "162.88",
+          "avgMs": "0.163",
+          "throughputMBs": 6
+        },
+        "10KB": {
+          "iterations": 500,
+          "totalMs": "261.35",
+          "avgMs": "0.523",
+          "throughputMBs": 18.68
+        }
+      },
+      "durationMs": "307468.40",
+      "businessMapping": {
+        "sm2": "100笔贷款 × 2次签名 = 3225.8ms",
+        "sm3": "10000笔贷款 × 2KB哈希 = 1178.0ms",
+        "sm4": "10000笔贷款 × 1KB加密 = 1627.6ms",
+        "note": "SM2/SM3/SM4均为纯JavaScript实现，性能受JS引擎限制，生产环境可通过C/C++ addon或硬件加速提升10-50倍"
+      }
+    },
+    "module3": {
+      "proofGen": {
+        "iterations": 100,
+        "successCount": 100,
+        "avgMs": "99.26",
+        "p50Ms": "94.18",
+        "p90Ms": "104.86",
+        "maxMs": "485.89"
+      },
+      "proofVerify": {
+        "iterations": 100,
+        "successCount": 100,
+        "avgMs": "12.904",
+        "p50Ms": "12.808",
+        "p90Ms": "14.324",
+        "maxMs": "17.591"
+      },
+      "durationMs": "12077.15",
+      "status": "success",
+      "sampleProof": {
+        "proof": {
+          "pi_a": [
+            "14533717994121845081134048193717888905864427401705498267129817535592170848866",
+            "20453402229423688548728665325885035646539114741056864141214859127605534543612",
+            "1"
+          ],
+          "pi_b": [
+            [
+              "2537689293277637897904278922739580106034942200727375239102753071205020816801",
+              "11200203017534193294614249676534688547090003648680253210050652144447502568325"
+            ],
+            [
+              "707182964083342105230132123869098624884926091759168219738741591037525962221",
+              "12921652949525763514874075079204525071305531874132131778960419001616809396662"
+            ],
+            [
+              "1",
+              "0"
+            ]
+          ],
+          "pi_c": [
+            "9897493043252800116614272128637776206278010266961142425717609366929268064495",
+            "15197547500442015272533377766599539021817316839381504721375583626659675288853",
+            "1"
+          ],
+          "protocol": "groth16",
+          "curve": "bn128"
+        },
+        "publicSignals": [
+          "1",
+          "600"
+        ]
+      }
+    },
+    "module5": {
+      "status": "success",
+      "results": [
+        {
+          "concurrency": 10,
+          "avgMs": "37.59",
+          "p95Ms": "41.07",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 50,
+          "avgMs": "127.86",
+          "p95Ms": "179.52",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 100,
+          "avgMs": "148.81",
+          "p95Ms": "203.06",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 150,
+          "avgMs": "226.07",
+          "p95Ms": "269.21",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 200,
+          "avgMs": "281.31",
+          "p95Ms": "345.73",
+          "successRate": "100.0"
+        }
+      ]
+    },
+    "module6": {
+      "status": "success",
+      "results": [
+        {
+          "concurrency": 10,
+          "avgMs": "25.26",
+          "p95Ms": "27.13",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 50,
+          "avgMs": "46.46",
+          "p95Ms": "62.15",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 100,
+          "avgMs": "100.51",
+          "p95Ms": "126.38",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 150,
+          "avgMs": "155.24",
+          "p95Ms": "203.22",
+          "successRate": "100.0"
+        },
+        {
+          "concurrency": 200,
+          "avgMs": "140.08",
+          "p95Ms": "203.03",
+          "successRate": "100.0"
+        }
+      ]
+    },
+    "module4": {
+      "concurrentQuery": {
+        "concurrency": 200,
+        "totalRequests": 200,
+        "success": 200,
+        "errors": 0,
+        "successRate": "100.0",
+        "durationMs": "125.19",
+        "stats": {
+          "avgMs": "87.41",
+          "p50Ms": "88.37",
+          "p95Ms": "95.81",
+          "p99Ms": "98.27",
+          "maxMs": "98.56"
+        },
+        "qps": "1597.60"
+      },
+      "recoveryTest": {
+        "concurrency": 100,
+        "totalRequests": 100,
+        "success": 100,
+        "errors": 0,
+        "successRate": "100.0",
+        "durationMs": "21.11",
+        "stats": {
+          "avgMs": "17.31",
+          "p50Ms": "19.61",
+          "p95Ms": "20.46",
+          "maxMs": "20.54"
+        }
+      },
+      "status": "success"
+    },
+    "module8": {
+      "loanProcess": {
+        "zkpProofGen": "95.67",
+        "userSetup": "300.09",
+        "proofSubmission": "5.15",
+        "loanSubmission": "23.50",
+        "total": "424.41",
+        "zkpProofGenPct": "22.5",
+        "userSetupPct": "70.7",
+        "proofSubmissionPct": "1.2",
+        "loanSubmissionPct": "5.5"
+      },
+      "repayProcess": {
+        "queryLoans": "3.88",
+        "repaySubmission": "0.00",
+        "loanStatusCheck": "3.10",
+        "total": "6.98",
+        "queryLoansPct": "55.6",
+        "repaySubmissionPct": "0.0",
+        "loanStatusCheckPct": "44.4"
+      },
+      "durationMs": "452.41",
+      "status": "success"
+    },
+    "module9": {
+      "memoryLeak": {
+        "initialHeapMB": 153.4,
+        "finalHeapMB": 159.24,
+        "totalGrowthMB": 5.84,
+        "withinLimit": true,
+        "snapshots": [
+          {
+            "requests": 0,
+            "heapUsedMB": "153.40"
+          },
+          {
+            "requests": 100,
+            "heapUsedMB": "151.02",
+            "growthMB": "-2.38"
+          },
+          {
+            "requests": 200,
+            "heapUsedMB": "150.35",
+            "growthMB": "-3.05"
+          },
+          {
+            "requests": 300,
+            "heapUsedMB": "154.55",
+            "growthMB": "1.15"
+          },
+          {
+            "requests": 400,
+            "heapUsedMB": "153.73",
+            "growthMB": "0.33"
+          },
+          {
+            "requests": 500,
+            "heapUsedMB": "157.85",
+            "growthMB": "4.45"
+          },
+          {
+            "requests": 600,
+            "heapUsedMB": "162.06",
+            "growthMB": "8.66"
+          },
+          {
+            "requests": 700,
+            "heapUsedMB": "153.01",
+            "growthMB": "-0.39"
+          },
+          {
+            "requests": 800,
+            "heapUsedMB": "151.11",
+            "growthMB": "-2.29"
+          },
+          {
+            "requests": 900,
+            "heapUsedMB": "160.21",
+            "growthMB": "6.81"
+          },
+          {
+            "requests": 1000,
+            "heapUsedMB": "159.24",
+            "growthMB": "5.84"
+          }
+        ]
+      },
+      "gcImpact": {
+        "requests": 50,
+        "successCount": 50,
+        "durationMs": "70.02",
+        "requestLatencies": {
+          "avgMs": "50.55",
+          "p50Ms": "57.55",
+          "p95Ms": "63.11",
+          "p99Ms": "63.98",
+          "maxMs": "63.98"
+        },
+        "gcEventCount": 1,
+        "gcEvents": [
+          {
+            "type": 1,
+            "duration": 1.9830999970436096,
+            "startTime": 382986.8635
+          }
+        ]
+      },
+      "durationMs": "2133.86",
+      "status": "success"
+    }
+  },
+  "duration": "382818.22"
+}

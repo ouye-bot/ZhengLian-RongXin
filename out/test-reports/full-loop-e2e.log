@@ -1,0 +1,158 @@
+[2026-11-02T04:08:55.693Z] [INFO] 区块链服务路由 → FISCO BCOS 联盟链
+
+== S0 环境预检：/health、DB、初始池恒等式、链状态基线
+  后端在线 /health ok
+数据库 finzktrust 创建成功
+  数据库可达 127.0.0.1:3307/finzktrust
+  初始池：PC=31064.07 UC=1800.21 LA=4100.16
+  链 isConnected=true totalRecords 基线=329 合约={"AuditStorage":true,"ZKPVerifier":true,"PublicKeyRegistry":true}
+  ✅ S0 环境预检：/health、DB、初始池恒等式、链状态基线 —— 通过
+
+== S1 注册并登录两个用户（借款人A / 担保人B，e2e_full_ 前缀）
+  S1 通过：A#88927 B#88928 注册登录成功
+
+== S2 夹具：A/B 设 credit_score=700、balance=5000（sm4Crypto 加密写库，同 finance-e2e.js:292-307）
+  S2 通过：A/B 余额 5000、信用分 700 解密回读一致；created_at 已拨回 30 天
+
+== S3 信用证明生成（阈值 600=借款准入强核值，credit.js:61）
+
+== S3 端侧 ZKP + 服务端验证存证（proofId/verificationCode/publicSignals）
+[2026-11-02T04:08:56.236Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-02T04:08:56.669Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-02T04:08:56.670Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-02T04:08:56.762Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-02T04:08:56.876Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-02T04:08:56.971Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+  proofA=proof_1793592536865_8c3895... proofB=proof_1793592537080_207627... publicSignals=["1","600"]
+  ✅ S3 端侧 ZKP + 服务端验证存证（proofId/verificationCode/publicSignals） —— 通过
+
+== S4 阈值篡改被拒：(a)低阈值证明 (b)篡改publicSignals (c)isValid=0；credit_proofs 不增
+[2026-11-02T04:08:57.089Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 500, hasNoOverdue: 1 }
+[2026-11-02T04:08:57.178Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-02T04:08:57.372Z] [INFO] 生成零知识证明 { creditScore: 500, threshold: 600, hasNoOverdue: 1 }
+[2026-11-02T04:08:57.456Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+  三连拒均为 400"零知识证明验证失败"；(a)低阈值 (b)篡改信号 (c)isValid=0；credit_proofs count 53→53 不增
+  ✅ S4 阈值篡改被拒：(a)低阈值证明 (b)篡改publicSignals (c)isValid=0；credit_proofs 不增 —— 通过
+
+== S5 担保邀约 /guarantee/request → 担保人 /guarantee/accept/:id
+  邀约#33 创建成功
+  邀约#33 已被 B 接受（ACCEPTED）
+  ✅ S5 担保邀约 /guarantee/request → 担保人 /guarantee/accept/:id —— 通过
+
+== S6 担保借款 1000/30d risk_mode=2：total=P+I(85折)+F、合约 ACTIVE、B frozen+1000、LA+1000
+  预期：利息=4.19 担保费F=9 loyalty=0
+  [池·S6借款前] PC=31064.07 UC=1800.21 LA=4100.16 total=32864.28 avail=28764.12 UIE=33.52 | Δ1=0 Δ2=0
+  借款#127 合约#30 total_amount=1013.19
+  [池·S6借款后] PC=31064.07 UC=800.21 LA=5100.16 total=31864.28 avail=26764.12 UIE=33.52 | Δ1=0 Δ2=0
+  ✅ S6 担保借款 1000/30d risk_mode=2：total=P+I(85折)+F、合约 ACTIVE、B frozen+1000、LA+1000 —— 通过
+
+== S7 押金借款 1000/30d risk_mode=1：低押金 400 负例 → FROZEN/margin_rate/余额净变
+  费率=0.2 押金=200
+  低押金 190 被拒（400 押金金额不足）
+  [池·S7借款前] PC=31064.07 UC=800.21 LA=5100.16 total=31864.28 avail=26764.12 UIE=33.52 | Δ1=0 Δ2=0
+  [池·S7借款后] PC=30864.28 UC=0 LA=6100.16 total=30864.28 avail=24764.12 UIE=33.52 | Δ1=0 Δ2=0
+  ✅ S7 押金借款 1000/30d risk_mode=1：低押金 400 负例 → FROZEN/margin_rate/余额净变 —— 通过
+
+== S8 纯信用借款 500/30d risk_mode=0：LA+500（活跃并发 2500 < 动态限额）
+  [池·S8借款前] PC=30864.28 UC=0 LA=6100.16 total=30864.28 avail=24764.12 UIE=33.52 | Δ1=0 Δ2=0
+  动态限额 getLoanLimit(700,70)=5000（期望口径 5000），借款前活跃并发=2000（S6 担保 1000 + S7 押金 1000）
+  [池·S8借款后] PC=30364.28 UC=0 LA=6600.16 total=30364.28 avail=23764.12 UIE=33.52 | Δ1=0 Δ2=0
+  借款#129 成功；LA+500；活跃并发 2500 < 限额 5000
+  ✅ S8 纯信用借款 500/30d risk_mode=0：LA+500（活跃并发 2500 < 动态限额） —— 通过
+
+== S9 部分还款 300（担保贷）：released_amount 增量释放、fee_collected 仍 0、LA−已还本金
+  部分还款300：利息0.16 本金299.84（同 finance-e2e.js:413-451 口径）
+  [池·S9还款前] PC=30364.28 UC=0 LA=6600.16 total=30364.28 avail=23764.12 UIE=33.52 | Δ1=0 Δ2=0
+  [池·S9还款后] PC=30364.28 UC=300 LA=6300.32 total=30664.28 avail=24363.96 UIE=33.68 | Δ1=0 Δ2=0
+  released_amount=299.84 fee_collected=0；LA Δ=-299.84
+  ✅ S9 部分还款 300（担保贷）：released_amount 增量释放、fee_collected 仍 0、LA−已还本金 —— 通过
+
+== S10 全额还款（担保贷）：借款人Δ=−(P+I+F)+0.1F、B 0.7F+loyalty+解冻、PC Δ、COMPLETED+fee_collected=1
+  全额还款：P2=700.16 I2=0.12 F=9 合计=709.28
+  [池·S10还款前] PC=30364.28 UC=300 LA=6300.32 total=30664.28 avail=24363.96 UIE=33.68 | Δ1=0 Δ2=0
+  [池·S10还款后] PC=30366.08 UC=1000.28 LA=5600.16 total=31366.36 avail=25766.2 UIE=33.8 | Δ1=0 Δ2=0
+  借款人 Δ=-708.38 担保人 Δbal=706.46 Δfrozen=-700.16 PC Δ=1.8 LA Δ=-700.16（loan.js:792-793 担保费代扣口径）
+  ✅ S10 全额还款（担保贷）：借款人Δ=−(P+I+F)+0.1F、B 0.7F+loyalty+解冻、PC Δ、COMPLETED+fee_collected=1 —— 通过
+
+== S11 押金贷全额还款：RELEASED + frozen_interest（PC 支付冻结期利息，有源）
+  冻结期拨回 1001 天，预期冻结期利息=1.92
+  [池·S11还款前] PC=30366.08 UC=1000.28 LA=5600.16 total=31366.36 avail=25766.2 UIE=33.8 | Δ1=0 Δ2=0
+  [池·S11还款后] PC=30563.99 UC=1800.61 LA=4600.16 total=32364.6 avail=27764.44 UIE=33.93 | Δ1=0 Δ2=0
+  押金订单 RELEASED，frozen_interest=1.92，PC 支付一致（利息有源）
+  ✅ S11 押金贷全额还款：RELEASED + frozen_interest（PC 支付冻结期利息，有源） —— 通过
+
+== S12 改库制造逾期 → checkOverdueLoans → overdue；负例：逾期用户生成证明 400
+[2026-11-02T04:08:58.540Z] [INFO] 借款已标记为逾期 {
+  transactionId: 129,
+  userId: 88927,
+  dueDate: 2026-11-01T04:08:58.000Z,
+  daysOverdue: 1
+}
+  checkOverdueLoans: {"total":1,"marked":1,"errors":0}
+[2026-11-02T04:08:58.545Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-02T04:08:58.640Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+  信用贷#129 → overdue；逾期生成证明被拒（400 您当前有逾期借款记录）
+  ✅ S12 改库制造逾期 → checkOverdueLoans → overdue；负例：逾期用户生成证明 400 —— 通过
+
+== S13 罚息还款：completed、扣款=P+约定利息+罚息（按日计息×罚息倍数）
+  [池·S13还款前] PC=30563.99 UC=1800.61 LA=4600.16 total=32364.6 avail=27764.44 UIE=33.93 | Δ1=0 Δ2=0
+  逾期1天 罚息倍数=1.5 罚息=0.12 总利息=2.59
+  [池·S13还款后] PC=31066.58 UC=1800.61 LA=4100.16 total=32867.19 avail=28767.03 UIE=33.93 | Δ1=0 Δ2=0
+  逾期还款成功：状态 completed、扣款 502.59（P+约定利息+罚息）
+  ✅ S13 罚息还款：completed、扣款=P+约定利息+罚息（按日计息×罚息倍数） —— 通过
+
+== S14 B 出资 1000/30d → UC+1000；B 赎回 100 → UC−(100+实付利息)、UIE 扣减、B 余额+
+  [池·S14出资前] PC=31066.58 UC=1800.61 LA=4100.16 total=32867.19 avail=28767.03 UIE=33.93 | Δ1=0 Δ2=0
+  [池·S14出资后] PC=31066.58 UC=2800.61 LA=4100.16 total=33867.19 avail=29767.03 UIE=33.93 | Δ1=0 Δ2=0
+  [池·S14赎回前] PC=31066.58 UC=2800.61 LA=4100.16 total=33867.19 avail=29767.03 UIE=33.93 | Δ1=0 Δ2=0
+[2026-11-02T04:08:58.981Z] [INFO] 动态平台利差计算 {
+  utilizationRate: 0.1211,
+  overdueRate: 0.3333,
+  utilizationBonus: 0,
+  overdueBonus: 0.01,
+  spread: 0.03
+}
+[2026-11-02T04:08:58.981Z] [INFO] 出资利率计算完成 {
+  weightedAverage: '174.68%',
+  lendingRate: '15.00%',
+  platformSpread: 0.03,
+  totalPrincipal: 41301.76000000001,
+  loanCount: 71
+}
+  出资年利率=0.15 动态利息=0.04 实付=0.04（有源上限 UIE=33.93）
+  [池·S14赎回后] PC=31066.58 UC=2700.57 LA=4100.16 total=33767.15 avail=29666.99 UIE=33.89 | Δ1=0 Δ2=0
+  赎回完成：UC Δ=-100.04 UIE Δ=-0.04
+  ✅ S14 B 出资 1000/30d → UC+1000；B 赎回 100 → UC−(100+实付利息)、UIE 扣减、B 余额+ —— 通过
+
+== S15 区块链浏览器：/status（public）+ /explorer（JWT）结构断言 + 上链软检轮询
+  /blockchain/status：isConnected=true totalRecords=338（S0 基线=329）
+  /explorer：totalRecords=338 recentRecords=3条 typeStats={"loan":1,"repay":2}
+  上链软检通过：totalRecords ≥ 330（S3 存证已入链）
+  ✅ S15 区块链浏览器：/status（public）+ /explorer（JWT）结构断言 + 上链软检轮询 —— 通过
+
+== S16 终态恒等式校验
+  [池·终态] PC=31066.58 UC=2700.57 LA=4100.16 total=33767.15 avail=29666.99 UIE=33.89 | Δ1=0 Δ2=0
+终态池：PC=31066.58 UC=2700.57 LA=4100.16 total=33767.15 avail=29666.99
+  ✅ S16 终态恒等式校验 —— 通过
+
+══════════ S0-S16 全部场景通过（15 项）══════════
+耗时 3.4s
+全程恒等式校验通过：total==PC+UC，available==total−LA，各分量非负

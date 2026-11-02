@@ -1,0 +1,553 @@
+{
+  "timestamp": "2026-11-01T18:32:48.740Z",
+  "summary": {
+    "total": 64,
+    "passed": 64,
+    "failed": 0
+  },
+  "modules": {
+    "sm2": {
+      "name": "SM2 椭圆曲线密码",
+      "passed": 11,
+      "failed": 0,
+      "knownIssues": 0
+    },
+    "sm3": {
+      "name": "SM3 哈希函数",
+      "passed": 6,
+      "failed": 0,
+      "knownIssues": 0
+    },
+    "sm4": {
+      "name": "SM4 对称加密",
+      "passed": 14,
+      "failed": 0,
+      "knownIssues": 0
+    },
+    "totp": {
+      "name": "TOTP 动态口令",
+      "passed": 10,
+      "failed": 0,
+      "knownIssues": 0
+    },
+    "zkp": {
+      "name": "零知识证明 ZKP",
+      "passed": 15,
+      "failed": 0,
+      "knownIssues": 0
+    },
+    "blockchain": {
+      "name": "区块链审计存证",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "knownIssues": 0
+    },
+    "sss": {
+      "name": "Shamir 秘密共享",
+      "passed": 5,
+      "failed": 0,
+      "knownIssues": 0
+    }
+  },
+  "results": [
+    {
+      "module": "sm2",
+      "name": "密钥对生成格式正确",
+      "passed": true,
+      "publicKeyLength": 130,
+      "privateKeyLength": 64
+    },
+    {
+      "module": "sm2",
+      "name": "签名与验签一致性",
+      "passed": true,
+      "signatureLength": 128
+    },
+    {
+      "module": "sm2",
+      "name": "错误公钥验签失败",
+      "passed": true,
+      "shouldBeFalse": true
+    },
+    {
+      "module": "sm2",
+      "name": "消息篡改后验签失败",
+      "passed": true,
+      "tamperedResult": false
+    },
+    {
+      "module": "sm2",
+      "name": "批量验证",
+      "passed": 10,
+      "total": 10
+    },
+    {
+      "module": "sm2",
+      "name": "签名缓存一致性",
+      "passed": true,
+      "firstResult": true,
+      "secondResult": true
+    },
+    {
+      "module": "sm2",
+      "name": "空消息签名",
+      "passed": true,
+      "expectedBehavior": "抛出\"签名消息不能为空\"异常",
+      "actualBehavior": "签名消息不能为空"
+    },
+    {
+      "module": "sm2",
+      "name": "超长消息签名（100KB）",
+      "passed": true,
+      "messageLength": 100000,
+      "signatureLength": 128
+    },
+    {
+      "module": "sm2",
+      "name": "私钥格式错误",
+      "passed": true,
+      "error": "SM2 私钥格式无效：必须为64位十六进制字符串"
+    },
+    {
+      "module": "sm2",
+      "name": "签名位翻转检测",
+      "passed": true,
+      "knownIssue": false,
+      "expectedBehavior": "翻转签名位后验签应返回 false",
+      "actualBehavior": "验签返回 false",
+      "bugId": "B9",
+      "bugLocation": "cryptoUtils.js:verifySM2Signature"
+    },
+    {
+      "module": "sm2",
+      "name": "buildSignatureData 格式验证",
+      "passed": true,
+      "sigData": "{\"amount\":100,\"creditProofId\":\"p1\",\"userId\":\"u1\"}",
+      "expectedOrder": "{\"amount\":100,\"creditProofId\":\"p1\",\"userId\":\"u1\"}",
+      "sigData2": "{\"amount\":100}",
+      "orderCorrect": true,
+      "missingKeySkipped": true
+    },
+    {
+      "module": "sm3",
+      "name": "同数据同哈希",
+      "passed": true,
+      "hash1": "8b9996d5cc34897741fcbcde217fb720ebd2247f6d88ea4dccbec4011c1c4a98",
+      "hash2": "8b9996d5cc34897741fcbcde217fb720ebd2247f6d88ea4dccbec4011c1c4a98",
+      "hash3": "8b9996d5cc34897741fcbcde217fb720ebd2247f6d88ea4dccbec4011c1c4a98"
+    },
+    {
+      "module": "sm3",
+      "name": "异数据异哈希",
+      "passed": true,
+      "hashA": "26e1bcdff5740b5ca8f5de870df53434086367bf535302e641595f4ad52d4e06",
+      "hashB": "f53d17026ca2690f6750b9a6118414558473fa2a5ac26f0699983a8489916f03",
+      "hashC": "c23749959d1eeea63e05430ece710f1fabf0cdb43c1d322d312c5fda3cae73fe"
+    },
+    {
+      "module": "sm3",
+      "name": "雪崩效应",
+      "passed": true,
+      "differentChars": 59,
+      "totalChars": 64
+    },
+    {
+      "module": "sm3",
+      "name": "长度扩展攻击防护",
+      "passed": true,
+      "shortLength": 64,
+      "longLength": 64
+    },
+    {
+      "module": "sm3",
+      "name": "雪崩效应阈值提高",
+      "passed": true,
+      "differentChars": 59,
+      "totalChars": 64,
+      "threshold": 28
+    },
+    {
+      "module": "sm3",
+      "name": "Unicode 数据哈希",
+      "passed": true,
+      "unicodeHash": "73bdee93706aa8996ff53ef3e71839c4c8ad266e24f3338e33e743e916b7c74b",
+      "asciiHash": "aa5407dc18f3481e7016babc7e109189b238848317a38f55f2dfd7d13be61f53",
+      "isHex64": true,
+      "differentFromAscii": true
+    },
+    {
+      "module": "sm4",
+      "name": "加解密循环",
+      "passed": true,
+      "originalLength": 1024,
+      "decryptedLength": 1024
+    },
+    {
+      "module": "sm4",
+      "name": "认证标签防篡改",
+      "passed": true,
+      "note": "抛出异常"
+    },
+    {
+      "module": "sm4",
+      "name": "空数据加解密",
+      "passed": true,
+      "decryptedLength": 0
+    },
+    {
+      "module": "sm4",
+      "name": "长数据（10KB）加解密",
+      "passed": true,
+      "originalLength": 9653,
+      "decryptedLength": 9653
+    },
+    {
+      "module": "sm4",
+      "name": "数字输入加密",
+      "passed": true,
+      "encryptedValue": "v2:c466074bf6c3991a2...",
+      "decryptedValue": "12345"
+    },
+    {
+      "module": "sm4",
+      "name": "encryptFields users 表",
+      "passed": true,
+      "balanceEncrypted": true,
+      "creditScoreEncrypted": true,
+      "nameUnchanged": true
+    },
+    {
+      "module": "sm4",
+      "name": "decryptFields users 表",
+      "passed": true,
+      "balanceMatch": true,
+      "creditScoreMatch": true,
+      "nameMatch": true
+    },
+    {
+      "module": "sm4",
+      "name": "encryptFields transactions 表",
+      "passed": true,
+      "amountEncrypted": true,
+      "interestEncrypted": true,
+      "typeUnchanged": true
+    },
+    {
+      "module": "sm4",
+      "name": "decryptFields transactions 表",
+      "passed": true,
+      "amountMatch": true,
+      "interestMatch": true,
+      "typeMatch": true
+    },
+    {
+      "module": "sm4",
+      "name": "reEncrypt 密钥轮换",
+      "passed": true,
+      "originalCiphertext": "v2:ed70b7b97f3c55d68...",
+      "reEncryptedPrefix": "v2:55612361f7bc1ef2a...",
+      "decryptedMatch": true
+    },
+    {
+      "module": "sm4",
+      "name": "认证标签完整性（系统性）",
+      "passed": true,
+      "knownIssue": false,
+      "expectedBehavior": "篡改 IV/authTag/ciphertext 后解密应抛异常",
+      "actualBehavior": "iv=exception, authTag=exception, ciphertext=exception"
+    },
+    {
+      "module": "sm4",
+      "name": "跨用户密文隔离",
+      "passed": true,
+      "note": "user A 的密文不能用 user B 的 DEK 解密"
+    },
+    {
+      "module": "sm4",
+      "name": "旧格式密文兼容解密",
+      "passed": true,
+      "note": "旧格式（无 AAD）密文应能带 AAD 参数解密（兼容降级）"
+    },
+    {
+      "module": "sm4",
+      "name": "DEK 缓存一致性",
+      "passed": true,
+      "note": "两次 getDEK 应返回相同 DEK"
+    },
+    {
+      "module": "totp",
+      "name": "TOTP 正确验证",
+      "passed": true,
+      "token": "146226",
+      "secretLength": 32
+    },
+    {
+      "module": "totp",
+      "name": "错误 TOTP 码拒绝",
+      "passed": true,
+      "wrongToken": "000000",
+      "verifyResult": false
+    },
+    {
+      "module": "totp",
+      "name": "种子随机性",
+      "passed": true,
+      "secret1Length": 32,
+      "secret2Length": 32
+    },
+    {
+      "module": "totp",
+      "name": "时间窗口容错 - 前一窗口",
+      "passed": true,
+      "counter": 59785264,
+      "token": "526696",
+      "verifyResult": true
+    },
+    {
+      "module": "totp",
+      "name": "时间窗口容错 - 后一窗口",
+      "passed": true,
+      "counter": 59785266,
+      "token": "226039",
+      "verifyResult": true
+    },
+    {
+      "module": "totp",
+      "name": "时间窗口超限拒绝",
+      "passed": true,
+      "counter": 59785262,
+      "token": "574716",
+      "verifyResult": false
+    },
+    {
+      "module": "totp",
+      "name": "备份验证码生成",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "module": "totp",
+      "name": "备份验证码哈希",
+      "passed": true,
+      "hashedCount": 10
+    },
+    {
+      "module": "totp",
+      "name": "备份验证码验证",
+      "passed": true,
+      "code": "WCN8BBE9",
+      "matchedIndex": 0
+    },
+    {
+      "module": "totp",
+      "name": "备份验证码二次验证",
+      "passed": true,
+      "knownIssue": false,
+      "code": "WCN8BBE9",
+      "matchedIndex": -1,
+      "note": "正确拒绝已使用的码"
+    },
+    {
+      "module": "zkp",
+      "name": "ZKP 证明生成",
+      "passed": [
+        "11797454050415226655263801356287088838738033124119870357020705981279347523194",
+        "17941098042484973797488031604035327559507372110471073682993106883503982940277",
+        "1"
+      ],
+      "hasProof": true,
+      "hasPiA": true,
+      "hasPiB": true,
+      "hasPiC": true
+    },
+    {
+      "module": "zkp",
+      "name": "ZKP 正确验证",
+      "passed": true,
+      "verifyResult": true
+    },
+    {
+      "module": "zkp",
+      "name": "ZKP 错误证明验证失败",
+      "passed": true,
+      "tamperedResult": false
+    },
+    {
+      "module": "zkp",
+      "name": "ZKP 证明数据结构完整性",
+      "passed": true,
+      "publicSignalsLength": 2,
+      "publicSignals0": "1",
+      "hasPiA": true,
+      "hasPiB": true,
+      "hasPiC": true
+    },
+    {
+      "module": "zkp",
+      "name": "边界值 score==threshold",
+      "passed": true,
+      "hasProof": true,
+      "verifyResult": true
+    },
+    {
+      "module": "zkp",
+      "name": "不达标 score<threshold",
+      "passed": true,
+      "knownIssue": false,
+      "score": 500,
+      "threshold": 600,
+      "expectedBehavior": "score < threshold 时 verifyProof 应返回 false",
+      "actualBehavior": "verifyProof 返回 false",
+      "bugId": "B10",
+      "bugLocation": "circuits/credit.circom:L14 使用 <-- 而非 <=="
+    },
+    {
+      "module": "zkp",
+      "name": "单参数绕过漏洞(B2)",
+      "passed": true,
+      "knownIssue": false,
+      "expectedBehavior": "抛出异常",
+      "actualBehavior": "缺少必要参数: proof 和 publicSignals"
+    },
+    {
+      "module": "zkp",
+      "name": "极端值 score=300",
+      "passed": true,
+      "score": 300,
+      "threshold": 300,
+      "structureOK": [
+        "16962268280385018005296389047685651197596296154341936040530136070794346854633",
+        "16995860764521979641754191586561065889196417212618251448611384753634638023397",
+        "1"
+      ],
+      "verifyResult": true
+    },
+    {
+      "module": "zkp",
+      "name": "hasNoOverdue=0 但 score 达标",
+      "passed": true,
+      "score": 750,
+      "threshold": 600,
+      "hasNoOverdue": false,
+      "verifyResult": false,
+      "expectedBehavior": "hasNoOverdue=0 时 verifyProof 应返回 false"
+    },
+    {
+      "module": "zkp",
+      "name": "负数 creditScore 范围约束",
+      "passed": true,
+      "note": "负数通过电路约束验证（RangeCheck 应拒绝）",
+      "verifyResult": false
+    },
+    {
+      "module": "zkp",
+      "name": "超大 creditScore 范围约束",
+      "passed": true,
+      "note": "creditScore=9999 超出 12 位范围（0-4095），电路应拒绝",
+      "verifyResult": false
+    },
+    {
+      "module": "zkp",
+      "name": "hasNoOverdue 非布尔值",
+      "passed": true,
+      "note": "抛出异常，符合预期",
+      "error": "hasNoOverdue 必须为布尔值"
+    },
+    {
+      "module": "zkp",
+      "name": "证明持久化 zk_proof/public_signals",
+      "passed": true,
+      "hasZkProof": true,
+      "hasPublicSignals": true,
+      "proofStructureValid": true,
+      "signalsIsArray": true,
+      "signalsLength": 2
+    },
+    {
+      "module": "zkp",
+      "name": "存储后独立验证",
+      "passed": true,
+      "verifyResult": true,
+      "note": "第三方拿到 proof + publicSignals + verification_key 后可独立验证"
+    },
+    {
+      "module": "zkp",
+      "name": "验证密钥端点 verification_key.json",
+      "passed": true,
+      "exists": true,
+      "fieldsValid": true,
+      "fields": [
+        "protocol",
+        "curve",
+        "nPublic",
+        "vk_alpha_1",
+        "vk_beta_2",
+        "vk_gamma_2",
+        "vk_delta_2",
+        "vk_alphabeta_12",
+        "IC"
+      ]
+    },
+    {
+      "module": "blockchain",
+      "name": "区块链服务初始化",
+      "passed": true,
+      "isInitialized": true
+    },
+    {
+      "module": "blockchain",
+      "name": "审计哈希上链存证",
+      "passed": true,
+      "txHash": "N/A",
+      "success": true
+    },
+    {
+      "module": "blockchain",
+      "name": "区块链节点不可用时优雅降级",
+      "passed": true,
+      "threwError": false,
+      "result": {
+        "success": false,
+        "skipped": true,
+        "error": "Service not initialized"
+      },
+      "note": "自动验证降级行为"
+    },
+    {
+      "module": "sss",
+      "name": "分片与恢复",
+      "passed": true,
+      "originalLength": 32,
+      "recoveredLength": 32,
+      "sharesCount": 5
+    },
+    {
+      "module": "sss",
+      "name": "不足分片恢复失败",
+      "passed": true,
+      "recoveredValue": "76578d0ae1...",
+      "note": "2个分片不足以恢复3阈值秘密"
+    },
+    {
+      "module": "sss",
+      "name": "分片独立性",
+      "passed": true,
+      "firstShareY": "189a21151ea58e0509bf..."
+    },
+    {
+      "module": "sss",
+      "name": "不同阈值组合 (2,2)",
+      "passed": true,
+      "bothMatch": true,
+      "singleFailedToRecover": true
+    },
+    {
+      "module": "sss",
+      "name": "重复分片恢复",
+      "passed": true,
+      "duplicateResultPrefix": "00...",
+      "expectedPrefix": "0123456789..."
+    }
+  ]
+}

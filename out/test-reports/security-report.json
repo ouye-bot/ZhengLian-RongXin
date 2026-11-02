@@ -1,0 +1,545 @@
+{
+  "timestamp": "2026-11-01T18:33:38.083Z",
+  "overallStatus": "success",
+  "modules": {
+    "antiReplay": {
+      "order": 1,
+      "displayName": "防重放攻击测试",
+      "status": "success",
+      "passedTests": 6,
+      "totalTests": 6,
+      "testResults": [
+        {
+          "name": "缺少防重放字段",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "过期时间戳",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "重复 Nonce",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "Nonce 长度不足",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "无效签名",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "白名单接口无需防重放",
+          "status": "passed",
+          "expected": "200/401",
+          "actual": 200
+        }
+      ]
+    },
+    "jwtAuth": {
+      "order": 2,
+      "displayName": "JWT 认证测试",
+      "status": "success",
+      "passedTests": 3,
+      "totalTests": 3,
+      "testResults": [
+        {
+          "name": "缺少 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "伪造 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "过期 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    },
+    "paramValidation": {
+      "order": 3,
+      "displayName": "参数验证测试",
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "金额超出范围",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "期限非法",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "缺少creditProof",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "签名过短",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        }
+      ]
+    },
+    "generalError": {
+      "order": 4,
+      "displayName": "通用错误处理",
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "404 处理",
+          "status": "passed",
+          "expected": "404",
+          "actual": 404
+        },
+        {
+          "name": "密码强度",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "公钥格式",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "缺少sm2PublicKey",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        }
+      ]
+    },
+    "sm2Middleware": {
+      "order": 5,
+      "displayName": "SM2 签名中间件测试",
+      "status": "success",
+      "passedTests": 5,
+      "totalTests": 5,
+      "testResults": [
+        {
+          "name": "有效签名通过",
+          "status": "passed",
+          "expected": "200/400",
+          "actual": 400
+        },
+        {
+          "name": "错误签名拒绝(B1)",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "敏感路由缺少签名被拒绝",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "x-user-id伪造被拒绝",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "签名数据篡改",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    },
+    "zkpSecurity": {
+      "order": 6,
+      "displayName": "ZKP 验证安全测试",
+      "status": "success",
+      "passedTests": 3,
+      "totalTests": 3,
+      "testResults": [
+        {
+          "name": "单参数调用绕过(B2)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "缺少必要参数: proof 和 publicSignals"
+        },
+        {
+          "name": "篡改 publicSignals",
+          "status": "passed",
+          "expected": "false",
+          "actual": false
+        },
+        {
+          "name": "空 proof 结构",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "无效的证明格式: 缺少 pi_a, pi_b 或 pi_c"
+        }
+      ]
+    },
+    "sm4SilentFailure": {
+      "order": 7,
+      "displayName": "SM4 静默失败测试",
+      "status": "success",
+      "passedTests": 5,
+      "totalTests": 5,
+      "testResults": [
+        {
+          "name": "篡改密文解密(B3)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "认证标签不匹配"
+        },
+        {
+          "name": "截断密文(B3)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 number",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 object",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 undefined",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        }
+      ]
+    },
+    "authChain": {
+      "order": 8,
+      "displayName": "认证链路完整性测试",
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "过期JWT+有效防重放",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "有效JWT+重放Nonce",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "超出借款限额",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "黑名单Token不挂起(B5)",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    }
+  },
+  "results": {
+    "antiReplay": {
+      "status": "success",
+      "passedTests": 6,
+      "totalTests": 6,
+      "testResults": [
+        {
+          "name": "缺少防重放字段",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "过期时间戳",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "重复 Nonce",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "Nonce 长度不足",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "无效签名",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "白名单接口无需防重放",
+          "status": "passed",
+          "expected": "200/401",
+          "actual": 200
+        }
+      ]
+    },
+    "jwtAuth": {
+      "status": "success",
+      "passedTests": 3,
+      "totalTests": 3,
+      "testResults": [
+        {
+          "name": "缺少 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "伪造 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "过期 JWT",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    },
+    "paramValidation": {
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "金额超出范围",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "期限非法",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "缺少creditProof",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "签名过短",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        }
+      ]
+    },
+    "generalError": {
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "404 处理",
+          "status": "passed",
+          "expected": "404",
+          "actual": 404
+        },
+        {
+          "name": "密码强度",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "公钥格式",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "缺少sm2PublicKey",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        }
+      ]
+    },
+    "sm2Middleware": {
+      "status": "success",
+      "passedTests": 5,
+      "totalTests": 5,
+      "testResults": [
+        {
+          "name": "有效签名通过",
+          "status": "passed",
+          "expected": "200/400",
+          "actual": 400
+        },
+        {
+          "name": "错误签名拒绝(B1)",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "敏感路由缺少签名被拒绝",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "x-user-id伪造被拒绝",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "签名数据篡改",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    },
+    "zkpSecurity": {
+      "status": "success",
+      "passedTests": 3,
+      "totalTests": 3,
+      "testResults": [
+        {
+          "name": "单参数调用绕过(B2)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "缺少必要参数: proof 和 publicSignals"
+        },
+        {
+          "name": "篡改 publicSignals",
+          "status": "passed",
+          "expected": "false",
+          "actual": false
+        },
+        {
+          "name": "空 proof 结构",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "无效的证明格式: 缺少 pi_a, pi_b 或 pi_c"
+        }
+      ]
+    },
+    "sm4SilentFailure": {
+      "status": "success",
+      "passedTests": 5,
+      "totalTests": 5,
+      "testResults": [
+        {
+          "name": "篡改密文解密(B3)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "认证标签不匹配"
+        },
+        {
+          "name": "截断密文(B3)",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 number",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 object",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        },
+        {
+          "name": "非字符串输入 undefined",
+          "status": "passed",
+          "expected": "exception",
+          "actual": "密文格式无效"
+        }
+      ]
+    },
+    "authChain": {
+      "status": "success",
+      "passedTests": 4,
+      "totalTests": 4,
+      "testResults": [
+        {
+          "name": "过期JWT+有效防重放",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        },
+        {
+          "name": "有效JWT+重放Nonce",
+          "status": "passed",
+          "expected": "403",
+          "actual": 403
+        },
+        {
+          "name": "超出借款限额",
+          "status": "passed",
+          "expected": "400",
+          "actual": 400
+        },
+        {
+          "name": "黑名单Token不挂起(B5)",
+          "status": "passed",
+          "expected": "401",
+          "actual": 401
+        }
+      ]
+    }
+  },
+  "duration": 5136.9422
+}

@@ -1,0 +1,47 @@
+node_modules/
+.env
+*.log
+
+# 阶段5：测试完整输出入库存档
+!out/test-reports/*.log
+dist/
+build/
+.coverage
+.cache/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Test reports (generated at runtime)
+backend/test/results/
+backend/test/test_results/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# ---- 凭据与本地环境（脱敏，禁止入库）----
+backend/config/fisco/*.key
+backend/config/fisco/account.key
+contracts/artifacts/deployer.pem
+.npmrc
+backend/server.log
+backend/server-err.log
+frontend/build/
+
+# 运行期/历史数据文件不入库（含用户记录与审计链）
+backend/data/*.json
+
+# 论文/AI 开发工作区不入库
+.codex-doc-review/
+.claude/
+.codegraph/
+
+# ZKP 电路编译产物必须入库（后端验证与前端 Worker 读取），覆盖上方 build/ 通配忽略
+!circuits/build/
+!circuits/build/**
+backend/public/
+
+# 阶段工作产物（Verifier 导出中间件/备份）不入库
+circuits/out-stage3/
+out/stage3-backup/

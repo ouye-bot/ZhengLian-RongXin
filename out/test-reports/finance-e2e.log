@@ -1,0 +1,162 @@
+[2026-11-01T18:33:17.210Z] [INFO] 区块链服务路由 → FISCO BCOS 联盟链
+
+== 环境预检
+  后端在线 /health ok
+数据库 finzktrust 创建成功
+  数据库可达 127.0.0.1:3307/finzktrust
+  初始池：PC=30629.79 UC=900.05 LA=4100.16
+
+== 注册并登录两个用户（借款人A / 担保人B）
+  A#88916 B#88917 注册登录成功
+
+== 夹具：A/B 设 credit_score=700、balance=5000（sm4Crypto 加密写库）
+  A/B 余额 5000、信用分 700 写入并解密回读一致；created_at 已拨回 30 天（绕开注册冷静期限额）
+
+== 生成 ZK 证明与信用证明
+[2026-11-01T18:33:18.678Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:33:19.510Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+[2026-11-01T18:33:20.444Z] [INFO] 生成零知识证明 { creditScore: 700, threshold: 600, hasNoOverdue: 1 }
+[2026-11-01T18:33:20.603Z] [INFO] 零知识证明生成成功 {
+  publicSignalsLength: 2,
+  proofKeys: [ 'pi_a', 'pi_b', 'pi_c', 'protocol', 'curve' ]
+}
+  proofA=proof_1793558000414_42dcdb... proofB=proof_1793558000835_f4f3ba...
+
+== 场景① 担保模式：邀约→借款→部分还款→全额还款
+  预期：利息=4.19 担保费F=9 loyalty=0 (0.7F+loyalty→担保人, 0.1F→借款人)
+  邀约#30 创建成功（L 通过）
+  [池·①借款前] PC=30629.79 UC=900.05 LA=4100.16 total=31529.84 avail=27429.68 UIE=30.28 | Δ1=0 Δ2=0
+  借款#113 合约#27 total_amount=1013.19
+  [池·①借款后] PC=30529.84 UC=0 LA=5100.16 total=30529.84 avail=25429.68 UIE=30.28 | Δ1=0 Δ2=0
+  部分还款300：利息0.16 本金299.84 剩余本金700.16 剩余利息3.03 新总额(含F)712.19（参考全额无费口径=1000.16）
+  [池·①部分还款前] PC=30529.84 UC=0 LA=5100.16 total=30529.84 avail=25429.68 UIE=30.28 | Δ1=0 Δ2=0
+  [池·①部分还款后] PC=30559.84 UC=270 LA=4800.32 total=30829.84 avail=26029.52 UIE=30.42 | Δ1=0 Δ2=0
+  全额还款：P2=700.16 I2=0.12 F=9 合计=709.28
+  [池·①全额还款前] PC=30559.84 UC=270 LA=4800.32 total=30829.84 avail=26029.52 UIE=30.42 | Δ1=0 Δ2=0
+  [池·①全额还款后] PC=30631.67 UC=900.25 LA=4100.16 total=31531.92 avail=27431.76 UIE=30.53 | Δ1=0 Δ2=0
+  借款人 Δ=-708.38 担保人 Δbal=706.46 Δfrozen=-700.16 PC Δ=71.83 LA Δ=-700.16
+  ✅ 场景① 担保模式：邀约→借款→部分还款→全额还款 —— 通过
+
+== 场景② 押金模式：低押金拒绝(I)→正常借款(margin_rate)→还款释放利息有源(D)
+  费率=0.2 押金=200 借款利息=4.93
+  低押金 190 被拒（I 通过）：风控增强处理失败：押金金额不足：需至少 ¥200（费率 0.2），实际 ¥190
+  [池·②借款前] PC=30631.67 UC=900.25 LA=4100.16 total=31531.92 avail=27431.76 UIE=30.53 | Δ1=0 Δ2=0
+  [池·②借款后] PC=30531.92 UC=0 LA=5100.16 total=30531.92 avail=25431.76 UIE=30.53 | Δ1=0 Δ2=0
+  冻结期拨回 1001 天，预期冻结期利息=1.92
+  [池·②还款前] PC=30531.92 UC=0 LA=5100.16 total=30531.92 avail=25431.76 UIE=30.53 | Δ1=0 Δ2=0
+  [池·②还款后] PC=30629.82 UC=900.34 LA=4100.16 total=31530.16 avail=27430 UIE=30.67 | Δ1=0 Δ2=0
+  押金订单 RELEASED，frozen_interest=1.92，PC 支付一致（D 通过）
+  ✅ 场景② 押金模式：低押金拒绝(I)→正常借款(margin_rate)→还款释放利息有源(D) —— 通过
+
+== 场景③ 普通借款：due_date 改过去→标记逾期(A)→罚息还款
+[2026-11-01T18:33:22.855Z] [INFO] 借款已标记为逾期 {
+  transactionId: 115,
+  userId: 88916,
+  dueDate: 2026-10-31T18:33:22.000Z,
+  daysOverdue: 1
+}
+  checkOverdueLoans: {"total":1,"marked":1,"errors":0}
+  [池·③还款前] PC=30629.82 UC=400.34 LA=4600.16 total=31030.16 avail=26430 UIE=30.67 | Δ1=0 Δ2=0
+  逾期1天 罚息倍数=1.5 罚息=0.12 总利息=2.59
+  [池·③还款后] PC=30629.82 UC=902.93 LA=4100.16 total=31532.75 avail=27432.59 UIE=33.26 | Δ1=0 Δ2=0
+  逾期还款成功：扣款 502.59（A 通过）
+  ✅ 场景③ 普通借款：due_date 改过去→标记逾期(A)→罚息还款 —— 通过
+
+== 场景④ 逾期16天：担保代偿+押金没收→liquidateOverdueLoans 核销
+[2026-11-01T18:33:23.926Z] [INFO] 借款已标记为逾期 {
+  transactionId: 116,
+  userId: 88916,
+  dueDate: 2026-10-16T18:33:23.000Z,
+  daysOverdue: 16
+}
+[2026-11-01T18:33:23.928Z] [INFO] 借款已标记为逾期 {
+  transactionId: 117,
+  userId: 88916,
+  dueDate: 2026-10-16T18:33:23.000Z,
+  daysOverdue: 16
+}
+  [池·④清算前] PC=30132.75 UC=0 LA=5500.16 total=30132.75 avail=24632.59 UIE=33.26 | Δ1=0 Δ2=0
+  担保贷款 outstanding=808.61（押金没收另计 120），押金贷款 outstanding=606.91、没收=120
+[2026-11-01T18:33:24.377Z] [INFO] 担保代偿已执行 {
+  contractId: 28,
+  guarantorId: 88917,
+  outstandingAmount: 808.61,
+  actualCompensation: 808.61,
+  fromFrozen: 800,
+  fromBalance: 8.61,
+  residualRelease: 0,
+  principalOutstanding: 800,
+  interestPart: 8.61,
+  remainingBalance: 4197.69,
+  remainingFrozen: 0
+}
+[2026-11-01T18:33:24.381Z] [INFO] 违约清算：担保人信用分扣减 { loanId: 116, guarantorId: 88917, delta: -10 }
+[2026-11-01T18:33:24.395Z] [INFO] 违约清算完成 { loanId: 116, outstanding: 808.61 }
+[2026-11-01T18:33:24.415Z] [INFO] 保证金清算完成 {
+  loanId: 117,
+  userId: '88916',
+  liquidated: 120,
+  principalOutstanding: 600
+}
+[2026-11-01T18:33:24.415Z] [INFO] 违约清算：保证金已没收 { loanId: 117, margin: 120 }
+[2026-11-01T18:33:24.436Z] [INFO] 违约清算完成 { loanId: 117, outstanding: 606.91 }
+[2026-11-01T18:33:24.436Z] [INFO] 违约清算任务结束 { total: 2, liquidated: 2, skipped: 0, errors: 0 }
+  liquidateOverdueLoans: {"total":2,"liquidated":2,"skipped":0,"errors":0}
+  [池·④清算后] PC=31061.36 UC=0 LA=4100.16 total=31061.36 avail=26961.2 UIE=33.26 | Δ1=0 Δ2=0
+  清算完成：PC Δ=+928.61 LA Δ=-1400（B 通过）
+  ✅ 场景④ 逾期16天：担保代偿+押金没收→liquidateOverdueLoans 核销 —— 通过
+
+== 场景⑤-a userB 出资1000→借款200→还款（利息计入 UC/UIE）
+  [池·⑤出资前] PC=31061.36 UC=0 LA=4100.16 total=31061.36 avail=26961.2 UIE=33.26 | Δ1=0 Δ2=0
+  [池·⑤出资后] PC=31061.36 UC=1000 LA=4100.16 total=32061.36 avail=27961.2 UIE=33.26 | Δ1=0 Δ2=0
+  [池·⑤还款前] PC=31061.36 UC=800 LA=4300.16 total=31861.36 avail=27561.2 UIE=33.26 | Δ1=0 Δ2=0
+  [池·⑤还款后] PC=31061.36 UC=1000.04 LA=4100.16 total=32061.4 avail=27961.24 UIE=33.3 | Δ1=0 Δ2=0
+  ✅ 场景⑤-a userB 出资1000→借款200→还款（利息计入 UC/UIE） —— 通过
+
+== 场景⑤-b userB 赎回100（利息有源，UC 减 amount+actualInterest）
+  [池·⑤赎回前] PC=31061.36 UC=1000.04 LA=4100.16 total=32061.4 avail=27961.24 UIE=33.3 | Δ1=0 Δ2=0
+[2026-11-01T18:33:25.241Z] [INFO] 动态平台利差计算 {
+  utilizationRate: 0.1279,
+  overdueRate: 0.3333,
+  utilizationBonus: 0,
+  overdueBonus: 0.01,
+  spread: 0.03
+}
+[2026-11-01T18:33:25.242Z] [INFO] 出资利率计算完成 {
+  weightedAverage: '175.03%',
+  lendingRate: '15.00%',
+  platformSpread: 0.03,
+  totalPrincipal: 36601.44,
+  loanCount: 64
+}
+  出资年利率=0.15 动态利息=0.04 实付=0.04（有源上限 UIE=33.3）
+  [池·⑤赎回后] PC=31061.36 UC=900 LA=4100.16 total=31961.36 avail=27861.2 UIE=33.26 | Δ1=0 Δ2=0
+  赎回完成：UC Δ=-100.04（E/K 通过）
+  ✅ 场景⑤-b userB 赎回100（利息有源，UC 减 amount+actualInterest） —— 通过
+
+== 场景⑥ 同一笔贷款并发两次全额还款（Promise.all）
+  [池·⑥并发前] PC=31061.36 UC=600 LA=4400.16 total=31661.36 avail=27261.2 UIE=33.26 | Δ1=0 Δ2=0
+  [池·⑥并发后] PC=31061.36 UC=900.05 LA=4100.16 total=31961.41 avail=27861.25 UIE=33.31 | Δ1=0 Δ2=0
+  并发结果：1 成功 / 1 拒绝（r.status=[200,biz-fail]），资金单次入账（F 通过）
+  ✅ 场景⑥ 同一笔贷款并发两次全额还款（Promise.all） —— 通过
+
+== 场景⑦ 孤儿押金订单清理（J：FROZEN+无主+超10分钟→RELEASED 不计息）
+  夹具：孤儿订单#39（200 元，11 分钟前），A frozen=200
+[2026-11-01T18:33:25.954Z] [INFO] 孤儿押金订单已清理解冻 { orderId: 39 }
+[2026-11-01T18:33:25.954Z] [INFO] 孤儿押金订单清理任务结束 { total: 1, cleaned: 1, skipped: 0, errors: 0 }
+  cleanupOrphanMarginOrders: {"total":1,"cleaned":1,"skipped":0,"errors":0}
+  [池·⑦孤儿清理后] PC=31061.36 UC=900.05 LA=4100.16 total=31961.41 avail=27861.25 UIE=33.31 | Δ1=0 Δ2=0
+  夹具已清理（订单删除、用户余额/冻结复原）
+  ✅ 场景⑦ 孤儿押金订单清理（J：FROZEN+无主+超10分钟→RELEASED 不计息） —— 通过
+
+== 终态恒等式校验
+  [池·终态] PC=31061.36 UC=900.05 LA=4100.16 total=31961.41 avail=27861.25 UIE=33.31 | Δ1=0 Δ2=0
+终态池：PC=31061.36 UC=900.05 LA=4100.16 total=31961.41 avail=27861.25
+  ✅ 终态恒等式校验 —— 通过
+
+══════════ 全部场景通过 ══════════
+耗时 8.7s
+全程恒等式校验通过：total==PC+UC，available==total−LA，各分量非负

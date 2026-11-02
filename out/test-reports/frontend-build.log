@@ -1,0 +1,106 @@
+
+> fin-zk-trust-frontend@1.0.0 build
+> react-app-rewired build
+
+Creating an optimized production build...
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Compiled with warnings.
+
+[eslint] 
+src\App.js
+  Line 159:7:   'verifyLoginStatus' is assigned a value but never used  no-unused-vars
+  Line 351:15:  'token' is assigned a value but never used              no-unused-vars
+  Line 472:9:   'addCryptoLog' is assigned a value but never used       no-unused-vars
+
+src\components\CryptoLogPanel.js
+  Line 14:3:   'Tooltip' is defined but never used         no-unused-vars
+  Line 36:15:  'token' is assigned a value but never used  no-unused-vars
+  Line 62:13:  'token' is assigned a value but never used  no-unused-vars
+
+src\components\Navbar.js
+  Line 5:8:  'AccountCircleIcon' is defined but never used  no-unused-vars
+
+src\components\riskEnhancement\GuaranteeAcceptedList.jsx
+  Line 13:3:  'Divider' is defined but never used  no-unused-vars
+
+src\pages\Account.js
+  Line 225:9:  'handleCollect' is assigned a value but never used  no-unused-vars
+
+src\pages\Borrow.js
+  Line 27:23:   'getSM2KeyPair' is defined but never used                                                                                                                                       no-unused-vars
+  Line 27:74:   'generateSignatureData' is defined but never used                                                                                                                               no-unused-vars
+  Line 212:6:   React Hook useEffect has missing dependencies: 'fetchLatestCreditProof', 'loadAcceptedRequests', and 'loadPendingRequests'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 928:27:  'marginRateVal' is assigned a value but never used                                                                                                                              no-unused-vars
+
+src\pages\CreditProof.js
+  Line 20:10:  'getSM2KeyPair' is defined but never used      no-unused-vars
+  Line 27:9:   'navigate' is assigned a value but never used  no-unused-vars
+
+src\pages\FundPoolPage.js
+  Line 5:3:  'Paper' is defined but never used  no-unused-vars
+
+src\pages\Home.js
+  Line 9:3:   'CardContent' is defined but never used     no-unused-vars
+  Line 19:3:  'Divider' is defined but never used         no-unused-vars
+  Line 20:3:  'IconButton' is defined but never used      no-unused-vars
+  Line 27:8:  'ArrowRightIcon' is defined but never used  no-unused-vars
+
+src\pages\InvestPage.js
+  Line 19:3:   'MenuItem' is defined but never used                                                                                                             no-unused-vars
+  Line 21:23:  'getSM2KeyPair' is defined but never used                                                                                                        no-unused-vars
+  Line 21:74:  'generateSignatureData' is defined but never used                                                                                                no-unused-vars
+  Line 60:6:   React Hook useEffect has missing dependencies: 'fetchLatestCreditProof' and 'fetchUserData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\MfaVerify.js
+  Line 2:71:  'Collapse' is defined but never used  no-unused-vars
+
+src\pages\MyInvestPage.js
+  Line 33:3:  'LineChart' is defined but never used                                                                                no-unused-vars
+  Line 34:3:  'Line' is defined but never used                                                                                     no-unused-vars
+  Line 52:6:  React Hook useEffect has a missing dependency: 'fetchInvestments'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 71:6:  React Hook useEffect has a missing dependency: 'fetchInvestments'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\Profile.js
+  Line 6:3:    'Paper' is defined but never used                                                                                 no-unused-vars
+  Line 7:3:    'Tabs' is defined but never used                                                                                  no-unused-vars
+  Line 8:3:    'Tab' is defined but never used                                                                                   no-unused-vars
+  Line 18:3:   'CardContent' is defined but never used                                                                           no-unused-vars
+  Line 33:10:  'TabPanel' is defined but never used                                                                              no-unused-vars
+  Line 51:10:  'account' is assigned a value but never used                                                                      no-unused-vars
+  Line 52:10:  'activeTab' is assigned a value but never used                                                                    no-unused-vars
+  Line 65:25:  'setSystemBalance' is assigned a value but never used                                                             no-unused-vars
+  Line 141:6:  React Hook useEffect has a missing dependency: 'fetchUserData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 175:6:  React Hook useEffect has a missing dependency: 'fetchUserData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 177:9:  'handleConnectWallet' is assigned a value but never used                                                          no-unused-vars
+  Line 194:9:  'handleTabChange' is assigned a value but never used                                                              no-unused-vars
+
+src\pages\RedeemPage.js
+  Line 22:23:   'getSM2KeyPair' is defined but never used                                                                                                                                                      no-unused-vars
+  Line 22:74:   'generateSignatureData' is defined but never used                                                                                                                                              no-unused-vars
+  Line 80:6:    React Hook useEffect has missing dependencies: 'fetchInvestments', 'fetchLatestCreditProof', 'fetchRedeemableAmount', and 'fetchUserData'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 611:27:  'isRedeemable' is assigned a value but never used                                                                                                                                              no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  405.8 kB  build\static\js\main.536f4168.js
+  56.95 kB  build\static\js\595.7c60ba3a.chunk.js
+  1.4 kB    build\static\js\149.c2b5873a.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
